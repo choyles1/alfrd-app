@@ -1974,30 +1974,15 @@ html, body { height: auto !important; overflow: auto !important; }
    Cloud Sync (JSONBin) + User/PIN Management + App Logic
 ═══════════════════════════════════════════════════════ */
 
-// Global error surface — catches silent async failures on GitHub Pages
-window.onerror = function(msg, src, line, col, err) {
-  console.error('ALFRD Error:', msg, 'Line:', line, err);
+// Global error surface
+window.onerror = function(msg, src, line) {
   const errEl = document.getElementById('login-error');
-  if (errEl) {
-    errEl.textContent = 'App error: ' + msg + ' (line ' + line + ')';
-    errEl.classList.add('show');
-  }
+  if (errEl) { errEl.textContent = 'Error (line ' + line + '): ' + msg; errEl.classList.add('show'); }
+  return false;
 };
 window.onunhandledrejection = function(e) {
-  console.error('ALFRD Unhandled Promise:', e.reason);
+  console.error('ALFRD Promise Error:', e.reason);
 };
-
-// Safe async wrapper for onclick handlers
-function loginClick() {
-  doLogin().catch(e => {
-    console.error('Login error:', e);
-    const errEl = document.getElementById('login-error');
-    if (errEl) { errEl.textContent = 'Login error: ' + e.message; errEl.classList.add('show'); }
-  });
-}
-function saveClick() {
-  saveRecord().catch(e => console.error('Save error:', e));
-}
 
 /* ─── DEPARTMENT CONFIG ─── */
 const DEPT_CONFIG = {
@@ -2240,97 +2225,119 @@ function renderSyncBars() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   PIN HASHING (SHA-256 via Web Crypto)
+   PIN HASHING — sync-first, async SHA-256 as fallback
 ═══════════════════════════════════════════════════════ */
-
-async function hashPinAsync(pin) {
-  const msgBuffer = new TextEncoder().encode('ALFRD::' + pin);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+function checkPinSync(pin, storedHash) {
+  // Returns true/false for hash: format, null if SHA-256 needed
+  if (!storedHash) return false;
+  if (storedHash.startsWith('hash:')) return storedHash === 'hash:' + pin;
+  return null;
 }
 
-async function pinMatchesUser(pin, user) {
-  // Legacy / seed format: 'hash:1234'
-  if (user.pinHash && user.pinHash.startsWith('hash:')) {
-    return user.pinHash === 'hash:' + pin;
-  }
-  // Real SHA-256 hash
+function hashPinAsync(pin) {
   try {
-    const hashed = await hashPinAsync(pin);
-    return hashed === user.pinHash;
+    return crypto.subtle.digest('SHA-256',
+      new TextEncoder().encode('ALFRD::' + pin)
+    ).then(function(buf) {
+      return Array.from(new Uint8Array(buf))
+        .map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
+    });
   } catch(e) {
-    return false;
+    return Promise.resolve('hash:' + pin);
   }
 }
 
 /* ═══════════════════════════════════════════════════════
-   AUTH
+   AUTH — fully synchronous entry point, no async on button
 ═══════════════════════════════════════════════════════ */
-async function doLogin() {
-  const nameInput = document.getElementById('login-name').value.trim();
-  const dept      = document.getElementById('login-dept').value;
-  const pin       = document.getElementById('login-pin').value.trim();
-  const err       = document.getElementById('login-error');
+function loginClick() {
+  var nameInput = (document.getElementById('login-name').value || '').trim();
+  var dept      = document.getElementById('login-dept').value || '';
+  var pin       = (document.getElementById('login-pin').value || '').trim();
+  var err       = document.getElementById('login-error');
+
+  err.classList.remove('show');
 
   if (!nameInput || !dept || !pin) {
     err.textContent = 'Please fill in all fields.';
     err.classList.add('show'); return;
   }
 
-  // If no users exist yet, bootstrap the admin account
-  if (!allUsers.length) {
-    allUsers = [...SEED_USERS];
+  // Ensure seed users are loaded
+  if (!allUsers || allUsers.length === 0) {
+    allUsers = [{ id:'u1', name:'Administrator', dept:'admin', role:'admin', pinHash:'hash:1234', active:true }];
     saveLocal();
   }
 
-  // Find matching user: dept must match, name is case-insensitive partial match
-  const match = allUsers.find(u =>
-    u.active &&
-    u.dept === dept &&
-    u.name.toLowerCase().trim() === nameInput.toLowerCase()
-  );
+  // Find user
+  var match = null;
+  for (var i = 0; i < allUsers.length; i++) {
+    var u = allUsers[i];
+    if (u.active &&
+        u.dept === dept &&
+        u.name.toLowerCase().trim() === nameInput.toLowerCase()) {
+      match = u; break;
+    }
+  }
 
   if (!match) {
-    // Give a helpful hint on first run
-    const hasAnyAdmin = allUsers.some(u => u.role === 'admin');
-    if (!hasAnyAdmin || dept === 'admin') {
-      err.textContent = 'Hint: Use name "Administrator", dept "Administration", PIN 1234';
-    } else {
-      err.textContent = 'No account found for that name and department. Contact your administrator.';
-    }
+    err.textContent = 'No account found. First run: name "Administrator" / dept "Administration" / PIN 1234';
     err.classList.add('show');
     document.getElementById('login-pin').value = '';
     return;
   }
 
-  const pinOk = await pinMatchesUser(pin, match);
-  if (!pinOk) {
+  // Sync PIN check (works for all hash: format accounts)
+  var syncResult = checkPinSync(pin, match.pinHash);
+
+  if (syncResult === true) {
+    finishLogin(match);
+  } else if (syncResult === false) {
     err.textContent = 'Incorrect PIN. Please try again.';
     err.classList.add('show');
     document.getElementById('login-pin').value = '';
-    return;
+  } else {
+    // SHA-256 async check for accounts created with crypto
+    err.textContent = 'Verifying…';
+    err.classList.add('show');
+    var captured = match;
+    hashPinAsync(pin).then(function(hashed) {
+      if (hashed === captured.pinHash) {
+        err.classList.remove('show');
+        finishLogin(captured);
+      } else {
+        err.textContent = 'Incorrect PIN. Please try again.';
+        err.classList.add('show');
+        document.getElementById('login-pin').value = '';
+      }
+    }).catch(function() {
+      err.textContent = 'PIN check failed — please try again.';
+      err.classList.add('show');
+    });
   }
+}
 
-  err.classList.remove('show');
+function finishLogin(match) {
   currentUser = { id: match.id, name: match.name, dept: match.dept, role: match.role };
-  applyDeptTheme(dept);
+  applyDeptTheme(match.dept);
   updateHeaders();
   renderSyncBars();
 
-  // Admin nav tab
-  document.querySelectorAll('.nav-tab-users').forEach(t =>
-    t.classList.toggle('visible', match.role === 'admin')
-  );
+  document.querySelectorAll('.nav-tab-users').forEach(function(t) {
+    t.classList.toggle('visible', match.role === 'admin');
+  });
 
-  // Pull latest from cloud
   if (isCloudReady()) {
-    setSyncStatus('syncing', 'Loading…');
-    await pullCloud();
+    pullCloud().then(function() {
+      renderResidentList(allResidents);
+    }).catch(function() {
+      renderResidentList(allResidents);
+    });
     startSyncInterval();
+  } else {
+    renderResidentList(allResidents);
   }
 
-  renderResidentList(allResidents);
   showScreen('screen-search');
   switchNav('residents');
 }
@@ -2338,7 +2345,8 @@ async function doLogin() {
 function doLogout() {
   currentUser = null;
   if (syncInterval) clearInterval(syncInterval);
-  ['login-pin','login-name'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('login-pin').value  = '';
+  document.getElementById('login-name').value = '';
   document.getElementById('login-dept').value = '';
   showScreen('screen-login');
 }
@@ -2508,10 +2516,9 @@ function switchTab(name) {
 /* ═══════════════════════════════════════════════════════
    SAVE RECORD
 ═══════════════════════════════════════════════════════ */
-async function saveRecord() {
+function saveClick() {
   if (!currentResident) return;
 
-  // Write core fields back to resident
   currentResident.first     = document.getElementById('core-first').value.trim();
   currentResident.last      = document.getElementById('core-last').value.trim();
   currentResident.room      = document.getElementById('core-room').value.trim();
@@ -2519,18 +2526,24 @@ async function saveRecord() {
   currentResident.physician = document.getElementById('core-physician').value.trim();
   currentResident.notes     = document.getElementById('core-notes').value.trim();
   currentResident.updatedAt = new Date().toISOString();
-  currentResident.updatedBy = currentUser.name;
+  currentResident.updatedBy = currentUser ? currentUser.name : '';
 
-  // Upsert in array
-  const idx = allResidents.findIndex(r => r.id === currentResident.id);
+  var idx = allResidents.findIndex(function(r) { return r.id === currentResident.id; });
   if (idx >= 0) allResidents[idx] = currentResident;
   else allResidents.push(currentResident);
 
   saveLocal();
-  showToast('✓ Saved locally…', 'success');
+  showToast('✓ Saved', 'success');
 
-  if (isCloudReady()) await pushCloud();
-  else showToast('✓ Saved (offline — will sync when connected)', 'success');
+  if (isCloudReady()) {
+    pushCloud().catch(function() {
+      showToast('Saved locally — cloud sync failed', '');
+    });
+  }
+}
+
+async function saveRecord() {
+  saveClick();
 }
 
 /* ═══════════════════════════════════════════════════════
