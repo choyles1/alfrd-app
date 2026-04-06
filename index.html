@@ -1,0 +1,3092 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ALFRD — Assisted Living Facility Resident Database</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --bg:        #0e1117;
+  --surface:   #161c27;
+  --surface2:  #1e2635;
+  --surface3:  #252f42;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --text:      #e8edf5;
+  --muted:     #7a8ba8;
+  --muted2:    #4a5a72;
+
+/* Accent — warm ember */
+–amber:     #f59e2a;
+–amber-dim: #c47d1a;
+–amber-glow:rgba(245,158,42,0.15);
+
+/* Department Colors */
+–clinical:    #fb7185;
+–dining:      #fb923c;
+–housekeeping:#a3e635;
+–maintenance: #38bdf8;
+–concierge:   #a78bfa;
+–activities:  #34d399;
+–laundry:     #f472b6;
+–sales:       #fbbf24;
+–admin:       #818cf8;
+
+–radius: 14px;
+–radius-sm: 9px;
+–shadow: 0 4px 24px rgba(0,0,0,0.4);
+–shadow-lg: 0 12px 48px rgba(0,0,0,0.6);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Nunito’, sans-serif;
+font-size: 15px;
+line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════
+SCREENS
+═══════════════════════════════════════════════ */
+.screen {
+position: fixed;
+inset: 0;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+z-index: 1;
+}
+.screen.active {
+opacity: 1;
+pointer-events: all;
+z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════
+██ SCREEN 1: LOGIN
+═══════════════════════════════════════════════ */
+#screen-login {
+background: var(–bg);
+align-items: center;
+justify-content: center;
+padding: 24px;
+}
+
+#screen-login::before {
+content:’’;
+position:absolute;
+top:-120px; left:50%;
+transform:translateX(-50%);
+width:500px; height:500px;
+background: radial-gradient(circle, rgba(245,158,42,0.12) 0%, transparent 70%);
+pointer-events:none;
+}
+
+.login-card {
+width: 100%;
+max-width: 400px;
+background: var(–surface);
+border: 1px solid var(–border2);
+border-radius: 24px;
+padding: 40px 32px 36px;
+box-shadow: var(–shadow-lg);
+position: relative;
+}
+
+.login-logo {
+text-align: center;
+margin-bottom: 32px;
+}
+
+.logo-wordmark {
+font-family: ‘Syne’, sans-serif;
+font-weight: 800;
+font-size: 42px;
+letter-spacing: 0.08em;
+color: #fff;
+line-height: 1;
+}
+.logo-wordmark span { color: var(–amber); }
+
+.logo-sub {
+font-size: 10.5px;
+letter-spacing: 0.18em;
+color: var(–muted);
+text-transform: uppercase;
+margin-top: 6px;
+}
+
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+
+.field-label {
+font-size: 11px;
+font-weight: 600;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–muted);
+}
+
+.field-input {
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+color: var(–text);
+font-family: ‘Nunito’, sans-serif;
+font-size: 15px;
+padding: 13px 16px;
+width: 100%;
+outline: none;
+transition: border-color 0.2s, box-shadow 0.2s;
+-webkit-appearance: none;
+}
+.field-input:focus {
+border-color: var(–amber);
+box-shadow: 0 0 0 3px var(–amber-glow);
+}
+.field-input::placeholder { color: var(–muted2); }
+
+select.field-input { cursor: pointer; }
+select.field-input option { background: var(–surface2); }
+
+.btn-primary {
+background: var(–amber);
+color: #0e1117;
+font-family: ‘Syne’, sans-serif;
+font-weight: 700;
+font-size: 15px;
+letter-spacing: 0.04em;
+border: none;
+border-radius: var(–radius-sm);
+padding: 15px;
+cursor: pointer;
+width: 100%;
+margin-top: 8px;
+transition: background 0.2s, transform 0.1s;
+-webkit-appearance: none;
+}
+.btn-primary:active { transform: scale(0.98); background: var(–amber-dim); }
+
+.login-error {
+background: rgba(251,113,133,0.1);
+border: 1px solid rgba(251,113,133,0.3);
+border-radius: var(–radius-sm);
+color: #fb7185;
+font-size: 13px;
+padding: 10px 14px;
+text-align: center;
+display: none;
+}
+.login-error.show { display: block; }
+
+/* ═══════════════════════════════════════════════
+APP SHELL HEADER
+═══════════════════════════════════════════════ */
+.app-header {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+padding: 0 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+height: 56px;
+flex-shrink: 0;
+z-index: 10;
+}
+
+.header-logo {
+font-family: ‘Syne’, sans-serif;
+font-weight: 800;
+font-size: 20px;
+letter-spacing: 0.08em;
+color: #fff;
+flex-shrink: 0;
+}
+.header-logo span { color: var(–amber); }
+
+.header-dept-badge {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+padding: 3px 9px;
+border-radius: 100px;
+background: var(–amber-glow);
+color: var(–amber);
+border: 1px solid rgba(245,158,42,0.3);
+flex-shrink: 0;
+}
+
+.header-spacer { flex: 1; }
+
+.header-user {
+font-size: 12px;
+color: var(–muted);
+text-align: right;
+line-height: 1.3;
+}
+.header-user strong { color: var(–text); display: block; font-size: 13px; }
+
+.btn-icon {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–muted);
+cursor: pointer;
+width: 36px; height: 36px;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px;
+flex-shrink: 0;
+transition: background 0.15s, color 0.15s;
+}
+.btn-icon:active { background: var(–surface3); color: var(–text); }
+
+/* ═══════════════════════════════════════════════
+██ SCREEN 2: SEARCH
+═══════════════════════════════════════════════ */
+#screen-search {
+background: var(–bg);
+}
+
+.search-body {
+flex: 1;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding: 16px;
+display: flex;
+flex-direction: column;
+gap: 14px;
+}
+
+.search-bar-wrap {
+position: relative;
+}
+.search-icon {
+position: absolute;
+left: 14px; top: 50%;
+transform: translateY(-50%);
+color: var(–muted2);
+font-size: 16px;
+pointer-events: none;
+}
+.search-input {
+background: var(–surface);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+color: var(–text);
+font-family: ‘Nunito’, sans-serif;
+font-size: 15px;
+padding: 13px 16px 13px 42px;
+width: 100%;
+outline: none;
+transition: border-color 0.2s;
+-webkit-appearance: none;
+}
+.search-input:focus { border-color: var(–amber); }
+.search-input::placeholder { color: var(–muted2); }
+
+.section-heading {
+font-family: ‘Syne’, sans-serif;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.14em;
+text-transform: uppercase;
+color: var(–muted);
+padding: 0 2px;
+}
+
+.resident-list { display: flex; flex-direction: column; gap: 10px; }
+
+.resident-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 14px 16px;
+display: flex;
+align-items: center;
+gap: 14px;
+cursor: pointer;
+transition: background 0.15s, border-color 0.15s, transform 0.1s;
+position: relative;
+overflow: hidden;
+}
+.resident-card::before {
+content: ‘’;
+position: absolute;
+left: 0; top: 0; bottom: 0;
+width: 3px;
+background: var(–amber);
+opacity: 0;
+transition: opacity 0.2s;
+}
+.resident-card:active {
+transform: scale(0.99);
+background: var(–surface2);
+border-color: var(–border2);
+}
+.resident-card:active::before { opacity: 1; }
+
+.resident-avatar {
+width: 46px; height: 46px;
+border-radius: 12px;
+background: var(–surface3);
+display: flex; align-items: center; justify-content: center;
+font-size: 20px;
+flex-shrink: 0;
+font-weight: 700;
+color: var(–amber);
+font-family: ‘Syne’, sans-serif;
+}
+
+.resident-info { flex: 1; min-width: 0; }
+.resident-name {
+font-family: ‘Syne’, sans-serif;
+font-weight: 700;
+font-size: 15px;
+color: var(–text);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.resident-meta {
+font-size: 12px;
+color: var(–muted);
+margin-top: 2px;
+}
+
+.resident-alerts {
+display: flex;
+gap: 4px;
+flex-shrink: 0;
+}
+.alert-dot {
+width: 8px; height: 8px;
+border-radius: 50%;
+background: var(–clinical);
+}
+.alert-dot.warn { background: var(–sales); }
+
+.resident-arrow {
+color: var(–muted2);
+font-size: 16px;
+flex-shrink: 0;
+}
+
+.empty-state {
+text-align: center;
+padding: 48px 24px;
+color: var(–muted);
+}
+.empty-state .es-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state .es-text { font-size: 14px; }
+
+/* ═══════════════════════════════════════════════
+██ SCREEN 3: RESIDENT FORM
+═══════════════════════════════════════════════ */
+#screen-form {
+background: var(–bg);
+}
+
+/* Resident banner */
+.resident-banner {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+padding: 12px 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+flex-shrink: 0;
+position: relative;
+overflow: hidden;
+}
+.resident-banner::after {
+content: ‘’;
+position: absolute;
+left: 0; top: 0; bottom: 0;
+width: 4px;
+background: var(–dept-color, var(–amber));
+transition: background 0.3s;
+}
+
+.banner-avatar {
+width: 44px; height: 44px;
+border-radius: 10px;
+background: var(–surface3);
+display: flex; align-items: center; justify-content: center;
+font-size: 18px;
+font-weight: 700;
+color: var(–amber);
+font-family: ‘Syne’, sans-serif;
+flex-shrink: 0;
+margin-left: 8px;
+}
+
+.banner-info { flex: 1; min-width: 0; }
+.banner-name {
+font-family: ‘Syne’, sans-serif;
+font-weight: 700;
+font-size: 16px;
+color: var(–text);
+}
+.banner-meta { font-size: 12px; color: var(–muted); }
+
+.banner-alerts {
+display: flex;
+flex-direction: column;
+gap: 3px;
+align-items: flex-end;
+flex-shrink: 0;
+}
+.banner-alert-chip {
+font-size: 10px;
+font-weight: 700;
+padding: 2px 8px;
+border-radius: 100px;
+background: rgba(251,113,133,0.15);
+color: var(–clinical);
+border: 1px solid rgba(251,113,133,0.25);
+white-space: nowrap;
+}
+.banner-alert-chip.warn {
+background: rgba(251,146,60,0.15);
+color: #fb923c;
+border-color: rgba(251,146,60,0.25);
+}
+
+/* Alert banner strip */
+.alert-strip {
+background: rgba(251,113,133,0.08);
+border-bottom: 1px solid rgba(251,113,133,0.2);
+padding: 8px 16px 8px 20px;
+font-size: 12px;
+color: var(–clinical);
+display: flex;
+align-items: center;
+gap: 8px;
+flex-shrink: 0;
+}
+.alert-strip.hidden { display: none; }
+
+/* Dept tab bar */
+.dept-tabs-wrap {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+flex-shrink: 0;
+}
+.dept-tabs-wrap::-webkit-scrollbar { display: none; }
+
+.dept-tabs {
+display: flex;
+padding: 0 8px;
+gap: 2px;
+width: max-content;
+min-width: 100%;
+}
+
+.dept-tab {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 3px;
+padding: 9px 14px 8px;
+cursor: pointer;
+border-bottom: 3px solid transparent;
+transition: border-color 0.2s, color 0.2s;
+position: relative;
+white-space: nowrap;
+min-width: 64px;
+}
+.dept-tab-icon { font-size: 16px; }
+.dept-tab-label {
+font-size: 9.5px;
+font-weight: 700;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+color: var(–muted);
+transition: color 0.2s;
+}
+.dept-tab.active .dept-tab-label { color: var(–dept-active-color, var(–amber)); }
+.dept-tab.active { border-bottom-color: var(–dept-active-color, var(–amber)); }
+
+/* Form body */
+.form-body {
+flex: 1;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding: 16px;
+}
+
+.form-panel { display: none; }
+.form-panel.active { display: flex; flex-direction: column; gap: 16px; }
+
+/* Form sections */
+.form-section {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+overflow: hidden;
+}
+
+.form-section-header {
+padding: 12px 16px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.form-section-icon { font-size: 14px; }
+.form-section-title {
+font-family: ‘Syne’, sans-serif;
+font-size: 12px;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(–muted);
+}
+
+.form-section-body {
+padding: 14px 16px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+/* Form fields */
+.form-row { display: flex; gap: 10px; }
+.form-row .form-field { flex: 1; }
+
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+
+.form-field label {
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(–muted);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+color: var(–text);
+font-family: ‘Nunito’, sans-serif;
+font-size: 14px;
+padding: 11px 13px;
+width: 100%;
+outline: none;
+transition: border-color 0.2s, box-shadow 0.2s;
+-webkit-appearance: none;
+}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+border-color: var(–dept-focus-color, var(–amber));
+box-shadow: 0 0 0 3px var(–dept-focus-glow, var(–amber-glow));
+}
+.form-field textarea { resize: none; min-height: 80px; line-height: 1.5; }
+.form-field select option { background: var(–surface2); }
+.form-field input::placeholder,
+.form-field textarea::placeholder { color: var(–muted2); }
+
+/* Toggle row */
+.toggle-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 4px 0;
+}
+.toggle-label { font-size: 13px; color: var(–text); }
+.toggle {
+width: 42px; height: 24px;
+background: var(–surface3);
+border-radius: 12px;
+border: 1px solid var(–border2);
+position: relative;
+cursor: pointer;
+transition: background 0.2s;
+flex-shrink: 0;
+}
+.toggle.on { background: var(–dept-focus-color, var(–amber)); border-color: transparent; }
+.toggle::after {
+content: ‘’;
+position: absolute;
+width: 18px; height: 18px;
+background: #fff;
+border-radius: 50%;
+top: 2px; left: 2px;
+transition: left 0.2s;
+box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle.on::after { left: 20px; }
+
+/* Chip select */
+.chip-group { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+padding: 5px 12px;
+border-radius: 100px;
+background: var(–surface2);
+border: 1px solid var(–border2);
+font-size: 12px;
+color: var(–muted);
+cursor: pointer;
+transition: all 0.15s;
+font-family: ‘Nunito’, sans-serif;
+}
+.chip.selected {
+background: var(–dept-focus-glow, var(–amber-glow));
+border-color: var(–dept-focus-color, var(–amber));
+color: var(–dept-focus-color, var(–amber));
+font-weight: 600;
+}
+
+/* Scale input */
+.scale-wrap { display: flex; gap: 6px; }
+.scale-btn {
+flex: 1;
+height: 36px;
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: 6px;
+color: var(–muted);
+font-family: ‘Syne’, sans-serif;
+font-weight: 700;
+font-size: 13px;
+cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.15s;
+}
+.scale-btn.selected {
+background: var(–dept-focus-color, var(–amber));
+border-color: transparent;
+color: #0e1117;
+}
+
+/* Save bar */
+.save-bar {
+background: var(–surface);
+border-top: 1px solid var(–border);
+padding: 12px 16px;
+display: flex;
+gap: 10px;
+flex-shrink: 0;
+}
+
+.btn-save {
+flex: 1;
+background: var(–dept-focus-color, var(–amber));
+color: #0e1117;
+font-family: ‘Syne’, sans-serif;
+font-weight: 700;
+font-size: 14px;
+letter-spacing: 0.04em;
+border: none;
+border-radius: var(–radius-sm);
+padding: 14px;
+cursor: pointer;
+transition: opacity 0.15s, transform 0.1s;
+}
+.btn-save:active { transform: scale(0.98); opacity: 0.85; }
+
+.btn-secondary {
+background: var(–surface2);
+border: 1px solid var(–border2);
+color: var(–muted);
+font-family: ‘Nunito’, sans-serif;
+font-weight: 600;
+font-size: 14px;
+border-radius: var(–radius-sm);
+padding: 14px 18px;
+cursor: pointer;
+transition: background 0.15s;
+}
+.btn-secondary:active { background: var(–surface3); }
+
+/* Toast */
+.toast {
+position: fixed;
+bottom: 80px;
+left: 50%; transform: translateX(-50%) translateY(20px);
+background: var(–surface3);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+padding: 12px 20px;
+font-size: 13px;
+font-weight: 600;
+color: var(–text);
+opacity: 0;
+transition: opacity 0.3s, transform 0.3s;
+pointer-events: none;
+white-space: nowrap;
+z-index: 999;
+box-shadow: var(–shadow-lg);
+}
+.toast.show {
+opacity: 1;
+transform: translateX(-50%) translateY(0);
+}
+.toast.success { border-color: rgba(52,211,153,0.4); color: #34d399; }
+
+/* Misc util */
+.divider {
+height: 1px;
+background: var(–border);
+margin: 4px 0;
+}
+
+/* ═══════════════════════════════════════════════
+BOTTOM NAV (search screen)
+═══════════════════════════════════════════════ */
+.bottom-nav {
+display: flex;
+background: var(–surface);
+border-top: 1px solid var(–border);
+flex-shrink: 0;
+}
+.nav-tab {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 3px;
+padding: 10px 0 12px;
+cursor: pointer;
+border-top: 2px solid transparent;
+transition: border-color 0.2s, color 0.2s;
+}
+.nav-tab-icon { font-size: 20px; }
+.nav-tab-label {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.07em;
+text-transform: uppercase;
+color: var(–muted);
+transition: color 0.2s;
+}
+.nav-tab.active { border-top-color: var(–dept-focus-color, var(–amber)); }
+.nav-tab.active .nav-tab-label { color: var(–dept-focus-color, var(–amber)); }
+
+/* ═══════════════════════════════════════════════
+██ SCREEN 4: REPORTS
+═══════════════════════════════════════════════ */
+#screen-reports { background: var(–bg); }
+
+.reports-body {
+flex: 1;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding: 16px;
+display: flex;
+flex-direction: column;
+gap: 14px;
+}
+
+/* Period toggle */
+.period-toggle {
+display: flex;
+background: var(–surface);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+overflow: hidden;
+}
+.period-btn {
+flex: 1;
+padding: 11px;
+text-align: center;
+font-family: ‘Syne’, sans-serif;
+font-size: 12px;
+font-weight: 700;
+letter-spacing: 0.06em;
+color: var(–muted);
+cursor: pointer;
+transition: background 0.2s, color 0.2s;
+}
+.period-btn.active {
+background: var(–dept-focus-color, var(–amber));
+color: #0e1117;
+}
+
+/* Report header card */
+.report-header-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 16px;
+position: relative;
+overflow: hidden;
+}
+.report-header-card::before {
+content: ‘’;
+position: absolute;
+left: 0; top: 0; bottom: 0;
+width: 4px;
+background: var(–dept-focus-color, var(–amber));
+}
+.report-header-card .rhc-inner { padding-left: 8px; }
+.report-dept {
+font-family: ‘Syne’, sans-serif;
+font-size: 18px;
+font-weight: 800;
+color: #fff;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.report-meta {
+font-size: 12px;
+color: var(–muted);
+margin-top: 4px;
+}
+
+/* Stat row */
+.stat-row {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 10px;
+}
+.stat-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 14px 12px;
+text-align: center;
+}
+.stat-card .stat-num {
+font-family: ‘Syne’, sans-serif;
+font-size: 26px;
+font-weight: 800;
+color: var(–dept-focus-color, var(–amber));
+line-height: 1;
+}
+.stat-card .stat-label {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(–muted);
+margin-top: 4px;
+}
+
+/* Report section */
+.report-section {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+overflow: hidden;
+}
+.report-section-title {
+font-family: ‘Syne’, sans-serif;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–muted);
+padding: 11px 16px;
+border-bottom: 1px solid var(–border);
+background: rgba(255,255,255,0.02);
+}
+
+/* Report row — resident line item */
+.report-row {
+display: flex;
+align-items: flex-start;
+gap: 12px;
+padding: 12px 16px;
+border-bottom: 1px solid var(–border);
+cursor: pointer;
+transition: background 0.15s;
+}
+.report-row:last-child { border-bottom: none; }
+.report-row:active { background: var(–surface2); }
+
+.rr-avatar {
+width: 34px; height: 34px;
+border-radius: 8px;
+background: var(–surface3);
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Syne’, sans-serif;
+font-size: 12px;
+font-weight: 700;
+color: var(–dept-focus-color, var(–amber));
+flex-shrink: 0;
+}
+.rr-info { flex: 1; min-width: 0; }
+.rr-name {
+font-weight: 700;
+font-size: 13px;
+color: var(–text);
+}
+.rr-detail {
+font-size: 11.5px;
+color: var(–muted);
+margin-top: 2px;
+line-height: 1.4;
+}
+.rr-badge {
+font-size: 10px;
+font-weight: 700;
+padding: 2px 8px;
+border-radius: 100px;
+white-space: nowrap;
+flex-shrink: 0;
+align-self: center;
+}
+.rr-badge.urgent { background: rgba(251,113,133,0.15); color: #fb7185; border: 1px solid rgba(251,113,133,0.25); }
+.rr-badge.warn   { background: rgba(251,146,60,0.15);  color: #fb923c; border: 1px solid rgba(251,146,60,0.25); }
+.rr-badge.ok     { background: rgba(52,211,153,0.12);  color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+.rr-badge.info   { background: rgba(56,189,248,0.12);  color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
+
+/* Empty report */
+.report-empty {
+padding: 32px 16px;
+text-align: center;
+color: var(–muted);
+font-size: 13px;
+}
+
+/* Print button in reports header */
+.btn-print {
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+color: var(–muted);
+font-family: ‘Syne’, sans-serif;
+font-size: 12px;
+font-weight: 700;
+padding: 8px 14px;
+cursor: pointer;
+display: flex;
+align-items: center;
+gap: 6px;
+transition: background 0.15s;
+}
+.btn-print:active { background: var(–surface3); }
+
+/* ═══════════════════════════════════════════════
+PRINT STYLES
+═══════════════════════════════════════════════ */
+@media print {
+body { background: #fff !important; color: #111 !important; overflow: auto !important; }
+html, body { height: auto !important; overflow: auto !important; }
+.screen { position: static !important; opacity: 1 !important; pointer-events: all !important; display: none !important; }
+#screen-reports { display: flex !important; }
+.app-header, .bottom-nav, .period-toggle, .btn-print { display: none !important; }
+.reports-body { padding: 0 !important; overflow: visible !important; }
+.report-header-card, .stat-card, .report-section { border: 1px solid #ccc !important; background: #fff !important; }
+.report-dept, .rr-name { color: #111 !important; }
+.report-meta, .rr-detail, .stat-label, .report-section-title { color: #555 !important; }
+.stat-num { color: #333 !important; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1: LOGIN
+═══════════════════════════════════════════ -->
+
+<div id="screen-login" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-wordmark">ALF<span>R</span>D</div>
+      <div class="logo-sub">Assisted Living Facility Resident Database</div>
+    </div>
+    <div class="login-form">
+      <div class="field-group">
+        <div class="field-label">Full Name</div>
+        <input class="field-input" id="login-name" type="text" placeholder="Your name" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Department</div>
+        <select class="field-input" id="login-dept">
+          <option value="">Select department…</option>
+          <option value="clinical">🩺 Clinical</option>
+          <option value="dining">🍽 Dining Services</option>
+          <option value="housekeeping">🧹 Housekeeping</option>
+          <option value="maintenance">🔧 Maintenance</option>
+          <option value="concierge">🎭 Concierge</option>
+          <option value="activities">🎨 Activities</option>
+          <option value="laundry">👕 Laundry</option>
+          <option value="sales">📣 Sales & Marketing</option>
+          <option value="admin">🏛 Administration</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">PIN</div>
+        <input class="field-input" id="login-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="current-password">
+      </div>
+      <div class="login-error" id="login-error">Incorrect PIN. Please try again.</div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2: RESIDENT SEARCH
+═══════════════════════════════════════════ -->
+
+<div id="screen-search" class="screen">
+  <div class="app-header">
+    <div class="header-logo">ALF<span>R</span>D</div>
+    <div class="header-dept-badge" id="header-dept-badge">Clinical</div>
+    <div class="header-spacer"></div>
+    <div class="header-user">
+      <strong id="header-user-name">Staff</strong>
+      <span id="header-user-role">Department</span>
+    </div>
+    <button class="btn-icon" onclick="doLogout()" title="Sign out">⎋</button>
+  </div>
+
+  <div class="search-body">
+    <div class="search-bar-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" id="search-input" type="text" placeholder="Search resident name or room…" oninput="filterResidents(this.value)" autocomplete="off" autocorrect="off">
+    </div>
+
+```
+<div class="section-heading">Residents</div>
+
+<div class="resident-list" id="resident-list"></div>
+```
+
+  </div>
+
+  <!-- Bottom Nav -->
+
+  <div class="bottom-nav">
+    <div class="nav-tab active" id="nav-residents" onclick="switchNav('residents')">
+      <div class="nav-tab-icon">🏠</div>
+      <div class="nav-tab-label">Residents</div>
+    </div>
+    <div class="nav-tab" id="nav-reports" onclick="switchNav('reports')">
+      <div class="nav-tab-icon">📊</div>
+      <div class="nav-tab-label">Reports</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 4: REPORTS
+═══════════════════════════════════════════ -->
+
+<div id="screen-reports" class="screen">
+  <div class="app-header">
+    <div class="header-logo">ALF<span>R</span>D</div>
+    <div class="header-dept-badge" id="report-dept-badge">Reports</div>
+    <div class="header-spacer"></div>
+    <button class="btn-print" onclick="window.print()">🖨 Print</button>
+    <button class="btn-icon" onclick="doLogout()" title="Sign out">⎋</button>
+  </div>
+
+  <div class="reports-body" id="reports-body">
+    <!-- Injected by generateReport() -->
+  </div>
+
+  <!-- Bottom Nav (mirrored) -->
+
+  <div class="bottom-nav">
+    <div class="nav-tab" id="rnav-residents" onclick="switchNav('residents')">
+      <div class="nav-tab-icon">🏠</div>
+      <div class="nav-tab-label">Residents</div>
+    </div>
+    <div class="nav-tab active" id="rnav-reports" onclick="switchNav('reports')">
+      <div class="nav-tab-icon">📊</div>
+      <div class="nav-tab-label">Reports</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3: RESIDENT FORM
+═══════════════════════════════════════════ -->
+
+<div id="screen-form" class="screen">
+
+  <!-- Header -->
+
+  <div class="app-header">
+    <button class="btn-icon" onclick="goBack()" title="Back">←</button>
+    <div class="header-logo">ALF<span>R</span>D</div>
+    <div class="header-spacer"></div>
+    <div class="header-user">
+      <strong id="form-user-name">Staff</strong>
+      <span id="form-user-role">Department</span>
+    </div>
+  </div>
+
+  <!-- Resident Banner -->
+
+  <div class="resident-banner" id="resident-banner">
+    <div class="banner-avatar" id="banner-avatar">??</div>
+    <div class="banner-info">
+      <div class="banner-name" id="banner-name">Resident Name</div>
+      <div class="banner-meta" id="banner-meta">Room — Care Level</div>
+    </div>
+    <div class="banner-alerts" id="banner-alerts"></div>
+  </div>
+
+  <!-- Alert Strip -->
+
+  <div class="alert-strip hidden" id="alert-strip">
+    ⚠️ <span id="alert-strip-text"></span>
+  </div>
+
+  <!-- Department Tabs -->
+
+  <div class="dept-tabs-wrap">
+    <div class="dept-tabs" id="dept-tabs">
+      <!-- Tabs injected by JS based on role -->
+    </div>
+  </div>
+
+  <!-- Form Body -->
+
+  <div class="form-body" id="form-body">
+
+```
+<!-- ── CORE (always first) ── -->
+<div class="form-panel active" id="panel-core">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">👤</span>
+      <span class="form-section-title">Core Demographics</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field"><label>First Name</label><input type="text" id="core-first" placeholder="First"></div>
+        <div class="form-field"><label>Last Name</label><input type="text" id="core-last" placeholder="Last"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Room</label><input type="text" id="core-room" placeholder="101A"></div>
+        <div class="form-field"><label>Date of Birth</label><input type="date" id="core-dob"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Care Level</label>
+          <select id="core-care">
+            <option>Independent</option>
+            <option>Assisted Living</option>
+            <option>Memory Care</option>
+            <option>Skilled Nursing</option>
+            <option>Respite</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Status</label>
+          <select id="core-status">
+            <option>Active</option>
+            <option>On Leave</option>
+            <option>Hospital</option>
+            <option>Discharged</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field"><label>Physician</label><input type="text" id="core-physician" placeholder="Dr. Smith"></div>
+      <div class="form-field"><label>Primary Contact</label><input type="text" id="core-contact" placeholder="Name — Relationship — Phone"></div>
+      <div class="form-field"><label>Notes</label><textarea id="core-notes" placeholder="General notes visible to all departments…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLINICAL ── -->
+<div class="form-panel" id="panel-clinical">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📊</span>
+      <span class="form-section-title">Vital Signs</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field"><label>BP Systolic</label><input type="number" placeholder="120" min="60" max="250"></div>
+        <div class="form-field"><label>BP Diastolic</label><input type="number" placeholder="80" min="40" max="150"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Pulse (bpm)</label><input type="number" placeholder="72" min="30" max="200"></div>
+        <div class="form-field"><label>Temp (°F)</label><input type="number" placeholder="98.6" step="0.1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>SpO2 (%)</label><input type="number" placeholder="98" min="70" max="100"></div>
+        <div class="form-field"><label>Weight (lbs)</label><input type="number" placeholder="145" step="0.1"></div>
+      </div>
+      <div class="form-field">
+        <label>Pain Level (0–10)</label>
+        <div class="scale-wrap" id="pain-scale">
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">0</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">1</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">2</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">3</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">4</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">5</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">6</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">7</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">8</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">9</div>
+          <div class="scale-btn" onclick="selectScale('pain-scale',this)">10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">⚠️</span>
+      <span class="form-section-title">Clinical Flags</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Fall Risk Level</label>
+        <select>
+          <option>Low</option><option>Moderate</option><option>High</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">DNR on file</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Bed alarm active</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Fall mat in use</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Wandering risk</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">💊</span>
+      <span class="form-section-title">Medication Flag</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Medication Name</label><input type="text" placeholder="e.g. Metformin 500mg"></div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Flag Type</label>
+          <select><option>Refused</option><option>Late</option><option>PRN Given</option><option>Held</option><option>Error</option></select>
+        </div>
+        <div class="form-field">
+          <label>Administered By</label>
+          <input type="text" placeholder="Staff initials">
+        </div>
+      </div>
+      <div class="form-field"><label>Notes</label><textarea placeholder="Additional medication notes…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🩹</span>
+      <span class="form-section-title">Wound / Skin Assessment</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Location on Body</label><input type="text" placeholder="e.g. Left heel, coccyx…"></div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Stage / Type</label>
+          <select><option>Stage I</option><option>Stage II</option><option>Stage III</option><option>Stage IV</option><option>Unstageable</option><option>Skin Tear</option><option>Bruise</option></select>
+        </div>
+        <div class="form-field">
+          <label>Healed?</label>
+          <select><option>No — Active</option><option>Improving</option><option>Yes — Healed</option></select>
+        </div>
+      </div>
+      <div class="form-field"><label>Treatment</label><textarea placeholder="Dressing type, frequency, ordered by…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📋</span>
+      <span class="form-section-title">Incident Report</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Incident Type</label>
+          <select><option>Fall</option><option>Near Miss</option><option>Elopement</option><option>Altercation</option><option>Choking</option><option>Skin Breakdown</option><option>Other</option></select>
+        </div>
+        <div class="form-field"><label>Date/Time</label><input type="datetime-local"></div>
+      </div>
+      <div class="form-field"><label>Description</label><textarea placeholder="Describe what occurred…"></textarea></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Family notified</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Physician notified</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📝</span>
+      <span class="form-section-title">Clinical Notes</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><textarea placeholder="General clinical observations for this shift…" style="min-height:100px"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DINING ── -->
+<div class="form-panel" id="panel-dining">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🍽</span>
+      <span class="form-section-title">Diet Profile</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Diet Type</label>
+          <select><option>Regular</option><option>Low Sodium</option><option>Diabetic</option><option>Heart Healthy</option><option>Renal</option><option>Pureed</option><option>Tube Feeding</option></select>
+        </div>
+        <div class="form-field">
+          <label>Texture</label>
+          <select><option>Regular</option><option>Soft</option><option>Minced & Moist</option><option>Pureed</option><option>Liquidized</option></select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Fluid Restriction</label>
+        <select><option>None</option><option>1500 mL/day</option><option>1200 mL/day</option><option>1000 mL/day</option><option>Custom — see notes</option></select>
+      </div>
+      <div class="form-field">
+        <label>Allergies (select all that apply)</label>
+        <div class="chip-group" id="allergy-chips">
+          <div class="chip" onclick="toggleChip(this)">Peanuts</div>
+          <div class="chip" onclick="toggleChip(this)">Tree Nuts</div>
+          <div class="chip" onclick="toggleChip(this)">Shellfish</div>
+          <div class="chip" onclick="toggleChip(this)">Fish</div>
+          <div class="chip" onclick="toggleChip(this)">Dairy</div>
+          <div class="chip" onclick="toggleChip(this)">Eggs</div>
+          <div class="chip" onclick="toggleChip(this)">Gluten</div>
+          <div class="chip" onclick="toggleChip(this)">Soy</div>
+        </div>
+      </div>
+      <div class="form-field"><label>Other Allergies / Intolerances</label><input type="text" placeholder="e.g. strawberries, MSG…"></div>
+      <div class="form-field"><label>Food Preferences</label><input type="text" placeholder="e.g. likes soup, prefers chicken…"></div>
+      <div class="form-field"><label>Dislikes</label><input type="text" placeholder="e.g. mushrooms, onions…"></div>
+      <div class="form-row">
+        <div class="form-field"><label>Dining Room</label><input type="text" placeholder="Main dining"></div>
+        <div class="form-field"><label>Seat Preference</label><input type="text" placeholder="Table 4, window seat…"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Tray delivery to room</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📝</span>
+      <span class="form-section-title">Meal Log — Today</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Meal</label>
+        <select><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
+      </div>
+      <div class="form-field">
+        <label>Intake %</label>
+        <div class="scale-wrap" id="intake-scale">
+          <div class="scale-btn" onclick="selectScale('intake-scale',this)">0%</div>
+          <div class="scale-btn" onclick="selectScale('intake-scale',this)">25%</div>
+          <div class="scale-btn" onclick="selectScale('intake-scale',this)">50%</div>
+          <div class="scale-btn" onclick="selectScale('intake-scale',this)">75%</div>
+          <div class="scale-btn" onclick="selectScale('intake-scale',this)">100%</div>
+        </div>
+      </div>
+      <div class="form-field"><label>Fluid Intake (oz)</label><input type="number" placeholder="8"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Meal refused</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="form-field"><label>Notes</label><textarea placeholder="Appetite, behavior, observations…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOUSEKEEPING ── -->
+<div class="form-panel" id="panel-housekeeping">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🧹</span>
+      <span class="form-section-title">Service Log</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Service Type</label>
+        <select><option>Daily Tidying</option><option>Full Clean</option><option>Linen Change</option><option>Bathroom Deep Clean</option><option>Carpet Clean</option><option>Move-in Clean</option><option>Move-out Clean</option></select>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Service completed</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="form-field"><label>Do Not Enter Until</label><input type="datetime-local"></div>
+      <div class="form-field"><label>Maintenance Flag</label><input type="text" placeholder="Anything to flag for maintenance?"></div>
+      <div class="form-field"><label>Preference Notes</label><textarea placeholder="Resident preferences, sensitivities, special instructions…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAINTENANCE ── -->
+<div class="form-panel" id="panel-maintenance">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🔧</span>
+      <span class="form-section-title">Work Order</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Issue Type</label>
+          <select><option>Plumbing</option><option>Electrical</option><option>HVAC</option><option>Furniture</option><option>Door / Lock</option><option>Flooring</option><option>Appliance</option><option>Safety Equipment</option><option>Other</option></select>
+        </div>
+        <div class="form-field">
+          <label>Priority</label>
+          <select><option>Routine</option><option>Urgent</option><option>Emergency</option></select>
+        </div>
+      </div>
+      <div class="form-field"><label>Description</label><textarea placeholder="Describe the issue in detail…"></textarea></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Safety flag — requires immediate action</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <select><option>Open</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select>
+      </div>
+      <div class="form-field"><label>Assigned To</label><input type="text" placeholder="Technician name"></div>
+      <div class="form-field"><label>Resolution Notes</label><textarea placeholder="What was done to resolve…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONCIERGE ── -->
+<div class="form-panel" id="panel-concierge">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🎭</span>
+      <span class="form-section-title">Resident Preferences</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Personal Interests</label><input type="text" placeholder="e.g. gardening, classical music, chess…"></div>
+      <div class="form-field"><label>Transportation Needs</label><textarea placeholder="Medical appointments, preferred times, mobility aids needed…"></textarea></div>
+      <div class="form-field"><label>Special Requests</label><textarea placeholder="Ongoing requests, preferences, accommodations…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">👨‍👩‍👧</span>
+      <span class="form-section-title">Family Visit Log</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Visitor Name</label><input type="text" placeholder="Name and relationship"></div>
+      <div class="form-row">
+        <div class="form-field"><label>Visit Date</label><input type="date"></div>
+        <div class="form-field"><label>Duration</label><input type="text" placeholder="e.g. 2 hours"></div>
+      </div>
+      <div class="form-field"><label>Notes</label><textarea placeholder="Visit observations, resident mood, family feedback…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ACTIVITIES ── -->
+<div class="form-panel" id="panel-activities">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">⭐</span>
+      <span class="form-section-title">Activity Preferences</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Preferred Program Types</label>
+        <div class="chip-group">
+          <div class="chip" onclick="toggleChip(this)">Arts & Crafts</div>
+          <div class="chip" onclick="toggleChip(this)">Music</div>
+          <div class="chip" onclick="toggleChip(this)">Exercise</div>
+          <div class="chip" onclick="toggleChip(this)">Games / Trivia</div>
+          <div class="chip" onclick="toggleChip(this)">Gardening</div>
+          <div class="chip" onclick="toggleChip(this)">Cooking</div>
+          <div class="chip" onclick="toggleChip(this)">Movies</div>
+          <div class="chip" onclick="toggleChip(this)">Religious / Spiritual</div>
+          <div class="chip" onclick="toggleChip(this)">Outings</div>
+          <div class="chip" onclick="toggleChip(this)">Social Hour</div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Group Preference</label>
+        <select><option>Loves groups</option><option>Prefers small groups</option><option>Prefers 1-on-1</option><option>Varies</option></select>
+      </div>
+      <div class="form-field">
+        <label>Best Time of Day</label>
+        <select><option>Morning</option><option>Afternoon</option><option>Evening</option><option>No preference</option></select>
+      </div>
+      <div class="form-field"><label>Mobility Notes</label><input type="text" placeholder="Wheelchair, walker, independent…"></div>
+      <div class="form-field"><label>Cognitive Notes</label><textarea placeholder="Attention span, memory considerations, engagement tips…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📊</span>
+      <span class="form-section-title">Participation Log</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Program / Activity</label><input type="text" placeholder="e.g. Morning stretch, Bingo, Art class…"></div>
+      <div class="form-row">
+        <div class="form-field"><label>Date</label><input type="date"></div>
+        <div class="form-field">
+          <label>Attended?</label>
+          <select><option>Yes</option><option>No — Refused</option><option>No — Unwell</option><option>No — Sleeping</option></select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Engagement Level</label>
+        <div class="scale-wrap" id="engage-scale">
+          <div class="scale-btn" onclick="selectScale('engage-scale',this)">😶</div>
+          <div class="scale-btn" onclick="selectScale('engage-scale',this)">🙂</div>
+          <div class="scale-btn" onclick="selectScale('engage-scale',this)">😊</div>
+          <div class="scale-btn" onclick="selectScale('engage-scale',this)">😄</div>
+          <div class="scale-btn" onclick="selectScale('engage-scale',this)">🌟</div>
+        </div>
+      </div>
+      <div class="form-field"><label>Notes</label><textarea placeholder="What resonated, what didn't, observations…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LAUNDRY ── -->
+<div class="form-panel" id="panel-laundry">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">⚙️</span>
+      <span class="form-section-title">Laundry Preferences</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Pickup Days</label>
+        <div class="chip-group">
+          <div class="chip" onclick="toggleChip(this)">Mon</div>
+          <div class="chip" onclick="toggleChip(this)">Tue</div>
+          <div class="chip" onclick="toggleChip(this)">Wed</div>
+          <div class="chip" onclick="toggleChip(this)">Thu</div>
+          <div class="chip" onclick="toggleChip(this)">Fri</div>
+          <div class="chip" onclick="toggleChip(this)">Sat</div>
+          <div class="chip" onclick="toggleChip(this)">Sun</div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Folding Preference</label>
+        <select><option>Folded</option><option>Hung</option><option>Rolled</option><option>Resident hangs own</option></select>
+      </div>
+      <div class="form-field"><label>Hang Dry Items</label><input type="text" placeholder="e.g. wool sweater, silk blouse…"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Do not mix with community laundry</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Detergent allergy / sensitivity</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="form-field"><label>Preferred Detergent</label><input type="text" placeholder="e.g. Tide Free & Gentle…"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">👕</span>
+      <span class="form-section-title">Pickup / Return Log</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field"><label>Pickup Date</label><input type="date"></div>
+        <div class="form-field"><label>Item Count</label><input type="number" placeholder="12"></div>
+      </div>
+      <div class="form-field"><label>Items (list)</label><textarea placeholder="3x shirts, 2x pants, 4x socks…"></textarea></div>
+      <div class="form-field">
+        <label>Status</label>
+        <select><option>Picked Up</option><option>In Wash</option><option>Drying</option><option>Folding</option><option>Returned</option></select>
+      </div>
+      <div class="form-field"><label>Special Instructions</label><input type="text" placeholder="e.g. cold wash only, no dryer…"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🏷</span>
+      <span class="form-section-title">Clothing Inventory / Lost Item</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Item Description</label><input type="text" placeholder="e.g. Blue cardigan — size M"></div>
+      <div class="form-field"><label>Label Code</label><input type="text" placeholder="e.g. MJ-042"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Flag as missing</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="form-field"><label>Notes</label><input type="text" placeholder="Last seen, last washed…"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SALES ── -->
+<div class="form-panel" id="panel-sales">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📣</span>
+      <span class="form-section-title">Move-In / Move-Out</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-row">
+        <div class="form-field"><label>Move-In Date</label><input type="date"></div>
+        <div class="form-field"><label>Move-Out Date</label><input type="date"></div>
+      </div>
+      <div class="form-field">
+        <label>Referral Source</label>
+        <select><option>Family / Self</option><option>Hospital</option><option>Physician</option><option>Home Health Agency</option><option>Hospice</option><option>Digital / Web</option><option>Community Event</option><option>Existing Resident</option><option>Other</option></select>
+      </div>
+      <div class="form-field"><label>Discharge Reason (if applicable)</label><input type="text" placeholder="Hospitalized, higher level of care, deceased…"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🗓</span>
+      <span class="form-section-title">Tour Log</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field"><label>Prospect Name</label><input type="text" placeholder="Jane Smith — Daughter"></div>
+      <div class="form-row">
+        <div class="form-field"><label>Tour Date</label><input type="datetime-local"></div>
+        <div class="form-field">
+          <label>Tour Type</label>
+          <select><option>In-person</option><option>Virtual</option><option>Phone</option></select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Outcome</label>
+        <select><option>Interested — Follow up</option><option>Very Interested — Deposit</option><option>Needs more time</option><option>Not a fit</option><option>Chose competitor</option></select>
+      </div>
+      <div class="form-field"><label>Objections / Concerns</label><textarea placeholder="Price, location, care level, timing…"></textarea></div>
+      <div class="form-field"><label>Sales Notes</label><textarea placeholder="Additional context for follow-up…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN ── -->
+<div class="form-panel" id="panel-admin">
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📄</span>
+      <span class="form-section-title">Contract & Financial</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Contract Type</label>
+        <select><option>Month-to-Month</option><option>Annual</option><option>Respite / Short Stay</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Monthly Rate ($)</label><input type="number" placeholder="4500"></div>
+        <div class="form-field"><label>Rate Lock Until</label><input type="date"></div>
+      </div>
+      <div class="form-field">
+        <label>Payment Source</label>
+        <select><option>Private Pay</option><option>Long-Term Care Insurance</option><option>Medicare</option><option>Medicaid</option><option>VA Benefits</option><option>Mixed</option></select>
+      </div>
+      <div class="form-field"><label>Insurance Carrier</label><input type="text" placeholder="Carrier name"></div>
+      <div class="form-field"><label>Policy Number</label><input type="text" placeholder="Policy #"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">LTC policy on file</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="form-field"><label>Responsible Party</label><input type="text" placeholder="Name — Relationship — Phone"></div>
+      <div class="form-field"><label>Billing Notes</label><textarea placeholder="Balance, payment arrangements, disputes…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🛡</span>
+      <span class="form-section-title">Compliance Flag</span>
+    </div>
+    <div class="form-section-body">
+      <div class="form-field">
+        <label>Flag Type</label>
+        <select><option>Missing Document</option><option>Expired Assessment</option><option>Regulatory Deadline</option><option>Licensing</option><option>Billing Dispute</option><option>Other</option></select>
+      </div>
+      <div class="form-field"><label>Description</label><textarea placeholder="Describe the compliance issue…"></textarea></div>
+      <div class="form-field"><label>Due Date</label><input type="date"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Resolved</span>
+        <div class="toggle" onclick="toggleSwitch(this)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+  </div><!-- /form-body -->
+
+  <!-- Save Bar -->
+
+  <div class="save-bar">
+    <button class="btn-secondary" onclick="goBack()">← Back</button>
+    <button class="btn-save" id="btn-save" onclick="saveRecord()">Save Record</button>
+  </div>
+
+</div><!-- /screen-form -->
+
+<!-- Toast -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 5: USER MANAGEMENT (admin only)
+═══════════════════════════════════════════ -->
+
+<div id="screen-users" class="screen">
+  <div class="app-header">
+    <button class="btn-icon" onclick="switchNav('residents')" title="Back">←</button>
+    <div class="header-logo">ALF<span>R</span>D</div>
+    <div class="header-dept-badge">Users</div>
+    <div class="header-spacer"></div>
+    <button class="btn-icon" onclick="openAddUser()" title="Add user" id="btn-add-user" style="font-size:20px;color:var(--amber)">+</button>
+  </div>
+
+  <div class="search-body">
+    <div class="section-heading">Staff Accounts</div>
+    <div id="user-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-tab" onclick="switchNav('residents')">
+      <div class="nav-tab-icon">🏠</div>
+      <div class="nav-tab-label">Residents</div>
+    </div>
+    <div class="nav-tab" onclick="switchNav('reports')">
+      <div class="nav-tab-icon">📊</div>
+      <div class="nav-tab-label">Reports</div>
+    </div>
+    <div class="nav-tab active">
+      <div class="nav-tab-icon">👥</div>
+      <div class="nav-tab-label">Users</div>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+
+<div id="user-modal" style="
+  display:none; position:fixed; inset:0; z-index:100;
+  background:rgba(0,0,0,0.7); align-items:flex-end; justify-content:center;">
+  <div style="
+    background:var(--surface); border-radius:20px 20px 0 0;
+    padding:24px; width:100%; max-width:480px;
+    border-top:1px solid var(--border2); box-shadow:var(--shadow-lg);">
+    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:20px;" id="user-modal-title">Add Staff</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field-group">
+        <div class="field-label">Full Name</div>
+        <input class="field-input" id="um-name" type="text" placeholder="Jane Smith" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Department</div>
+        <select class="field-input" id="um-dept">
+          <option value="clinical">🩺 Clinical</option>
+          <option value="dining">🍽 Dining Services</option>
+          <option value="housekeeping">🧹 Housekeeping</option>
+          <option value="maintenance">🔧 Maintenance</option>
+          <option value="concierge">🎭 Concierge</option>
+          <option value="activities">🎨 Activities</option>
+          <option value="laundry">👕 Laundry</option>
+          <option value="sales">📣 Sales & Marketing</option>
+          <option value="admin">🏛 Administration</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">PIN (4–6 digits)</div>
+        <input class="field-input" id="um-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Role</div>
+        <select class="field-input" id="um-role">
+          <option value="staff">Staff</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+      <div id="um-error" style="color:#fb7185;font-size:13px;display:none;"></div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn-secondary" style="flex:1" onclick="closeUserModal()">Cancel</button>
+        <button class="btn-save" style="flex:2" onclick="saveUser()">Save Staff</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SYNC STATUS BAR (injected into headers)
+═══════════════════════════════════════════ -->
+
+<style>
+.sync-bar {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 5px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.sync-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted2);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+.sync-dot.ok      { background: #34d399; }
+.sync-dot.error   { background: #fb7185; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.sync-bar .sync-spacer { flex:1; }
+.sync-setup-link {
+  color: var(--amber);
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+  font-size: 11px;
+}
+
+/* Setup modal */
+.setup-modal {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.8);
+  align-items: center; justify-content: center;
+  padding: 24px;
+}
+.setup-modal.open { display: flex; }
+.setup-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%; max-width: 400px;
+  box-shadow: var(--shadow-lg);
+}
+.setup-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 800;
+  color: #fff; margin-bottom: 6px;
+}
+.setup-sub {
+  font-size: 12.5px; color: var(--muted);
+  margin-bottom: 20px; line-height: 1.6;
+}
+.setup-link {
+  color: var(--amber); text-decoration: none; font-weight: 700;
+}
+.setup-steps {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 2;
+}
+.setup-steps strong { color: var(--text); }
+
+/* Nav tab for users (admin only) */
+.nav-tab-users { display: none; }
+.nav-tab-users.visible { display: flex; }
+</style>
+
+<!-- Setup Modal -->
+
+<div class="setup-modal" id="setup-modal">
+  <div class="setup-card">
+    <div class="setup-title">⚡ Connect Cloud Sync</div>
+    <div class="setup-sub">ALFRD uses <a href="https://jsonbin.io" target="_blank" class="setup-link">JSONBin.io</a> (free) to sync data across all facility devices. Takes 2 minutes to set up.</div>
+    <div class="setup-steps">
+      <strong>1.</strong> Go to jsonbin.io → Sign up free<br>
+      <strong>2.</strong> Click <strong>API Keys</strong> → copy your Master Key<br>
+      <strong>3.</strong> Paste it below — ALFRD creates your bins automatically
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field-group">
+        <div class="field-label">JSONBin Master Key</div>
+        <input class="field-input" id="setup-key" type="text" placeholder="$2b$10$…" autocomplete="off" spellcheck="false">
+      </div>
+      <div id="setup-error" style="color:#fb7185;font-size:12px;display:none;"></div>
+      <button class="btn-primary" onclick="connectCloud()">Connect & Initialize</button>
+      <button class="btn-secondary" onclick="closeSetup()" style="width:100%">Use Offline for Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   ALFRD — JavaScript Core
+   Cloud Sync (JSONBin) + User/PIN Management + App Logic
+═══════════════════════════════════════════════════════ */
+
+/* ─── DEPARTMENT CONFIG ─── */
+const DEPT_CONFIG = {
+  clinical:     { label: 'Clinical',      icon: '🩺', color: '#fb7185', glow: 'rgba(251,113,133,0.15)' },
+  dining:       { label: 'Dining',        icon: '🍽', color: '#fb923c', glow: 'rgba(251,146,60,0.15)'  },
+  housekeeping: { label: 'Housekeeping',  icon: '🧹', color: '#a3e635', glow: 'rgba(163,230,53,0.15)'  },
+  maintenance:  { label: 'Maintenance',   icon: '🔧', color: '#38bdf8', glow: 'rgba(56,189,248,0.15)'  },
+  concierge:    { label: 'Concierge',     icon: '🎭', color: '#a78bfa', glow: 'rgba(167,139,250,0.15)' },
+  activities:   { label: 'Activities',    icon: '🎨', color: '#34d399', glow: 'rgba(52,211,153,0.15)'  },
+  laundry:      { label: 'Laundry',       icon: '👕', color: '#f472b6', glow: 'rgba(244,114,182,0.15)' },
+  sales:        { label: 'Sales',         icon: '📣', color: '#fbbf24', glow: 'rgba(251,191,36,0.15)'  },
+  admin:        { label: 'Admin',         icon: '🏛', color: '#818cf8', glow: 'rgba(129,140,248,0.15)' },
+};
+
+const ROLE_TABS = {
+  clinical:     ['core','clinical'],
+  dining:       ['core','dining'],
+  housekeeping: ['core','housekeeping'],
+  maintenance:  ['core','maintenance'],
+  concierge:    ['core','concierge'],
+  activities:   ['core','activities'],
+  laundry:      ['core','laundry'],
+  sales:        ['core','sales'],
+  admin:        ['core','clinical','dining','housekeeping','maintenance','concierge','activities','laundry','sales','admin'],
+};
+
+/* ─── SEED DATA ─── */
+const SEED_RESIDENTS = [
+  { id:'r1', first:'Eleanor',  last:'Whitmore',  room:'101A', care:'Assisted Living', dob:'1938-03-12', physician:'Dr. Patel',    alerts:[{type:'urgent',text:'Fall risk — high'}],   notes:'Prefers morning routines. Family visits Sundays.', deptData:{} },
+  { id:'r2', first:'Harold',   last:'Beaumont',  room:'102',  care:'Memory Care',     dob:'1932-07-28', physician:'Dr. Chen',     alerts:[{type:'warn',text:'Wandering risk'}],         notes:'Responds well to music therapy.', deptData:{} },
+  { id:'r3', first:'Margaret', last:'Sullivan',  room:'205B', care:'Independent',     dob:'1945-11-04', physician:'Dr. Torres',   alerts:[],                                            notes:'Very independent. Prefers minimal assistance.', deptData:{} },
+  { id:'r4', first:'Robert',   last:'Kincaid',   room:'110',  care:'Skilled Nursing', dob:'1930-01-19', physician:'Dr. Williams', alerts:[{type:'urgent',text:'DNR on file'},{type:'warn',text:'Wound care — heel'}], notes:'Family involved in care decisions.', deptData:{} },
+  { id:'r5', first:'Dorothy',  last:'Chambers',  room:'308',  care:'Assisted Living', dob:'1940-06-22', physician:'Dr. Patel',    alerts:[],                                            notes:'Diabetic diet. Loves bingo and card games.', deptData:{} },
+  { id:'r6', first:'Franklin', last:'Morrison',  room:'212',  care:'Memory Care',     dob:'1935-09-15', physician:'Dr. Kim',      alerts:[{type:'warn',text:'Elopement risk'}],         notes:'Likes outdoor time in the morning.', deptData:{} },
+  { id:'r7', first:'Vera',     last:'Holloway',  room:'301',  care:'Independent',     dob:'1948-04-30', physician:'Dr. Torres',   alerts:[],                                            notes:'Former music teacher. Very social.', deptData:{} },
+  { id:'r8', first:'James',    last:'Calloway',  room:'119',  care:'Assisted Living', dob:'1936-12-08', physician:'Dr. Nguyen',   alerts:[{type:'urgent',text:'Aspiration risk'}],      notes:'Minced diet. Requires supervision at meals.', deptData:{} },
+];
+
+// Default admin account (PIN: 1234) — hashed with simple SHA-256 substitute
+// Real PIN stored as hash; for demo we compare directly then hash on save
+const SEED_USERS = [
+  { id:'u1', name:'Administrator', dept:'admin', role:'admin', pinHash: hashPin('1234'), active:true, createdAt: new Date().toISOString() },
+];
+
+/* ─── STATE ─── */
+let currentUser    = null;
+let currentResident= null;
+let activeTab      = 'core';
+let allResidents   = [];
+let allUsers       = [];
+let editingUserId  = null;
+let syncInterval   = null;
+
+// Cloud config stored in localStorage
+let cloudConfig = {
+  apiKey:       localStorage.getItem('alfrd_apiKey')    || '',
+  residentsBin: localStorage.getItem('alfrd_resBin')   || '',
+  usersBin:     localStorage.getItem('alfrd_usersBin') || '',
+};
+
+/* ═══════════════════════════════════════════════════════
+   CLOUD SYNC — JSONBin
+═══════════════════════════════════════════════════════ */
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+const isCloudReady = () => cloudConfig.apiKey && cloudConfig.residentsBin && cloudConfig.usersBin;
+
+function setSyncStatus(state, msg) {
+  // state: 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
+  document.querySelectorAll('.sync-dot').forEach(d => {
+    d.className = 'sync-dot ' + (state === 'idle' ? '' : state);
+  });
+  document.querySelectorAll('.sync-label').forEach(l => {
+    l.textContent = msg || '';
+  });
+}
+
+async function binFetch(binId, method='GET', data=null) {
+  const opts = {
+    method,
+    headers: {
+      'X-Master-Key': cloudConfig.apiKey,
+      'Content-Type': 'application/json',
+      'X-Bin-Versioning': 'false',
+    }
+  };
+  if (data) opts.body = JSON.stringify(data);
+  const url = method === 'POST'
+    ? `${JSONBIN_BASE}/b`
+    : `${JSONBIN_BASE}/b/${binId}${method==='GET' ? '/latest' : ''}`;
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(`JSONBin ${res.status}`);
+  return res.json();
+}
+
+async function createBin(name, data) {
+  const opts = {
+    method: 'POST',
+    headers: {
+      'X-Master-Key': cloudConfig.apiKey,
+      'Content-Type': 'application/json',
+      'X-Bin-Name': name,
+      'X-Bin-Private': 'true',
+    },
+    body: JSON.stringify(data)
+  };
+  const res = await fetch(`${JSONBIN_BASE}/b`, opts);
+  if (!res.ok) throw new Error(`Create bin failed: ${res.status}`);
+  const json = await res.json();
+  return json.metadata.id;
+}
+
+async function pullCloud() {
+  if (!isCloudReady()) return;
+  setSyncStatus('syncing', 'Syncing…');
+  try {
+    const [rRes, uRes] = await Promise.all([
+      binFetch(cloudConfig.residentsBin),
+      binFetch(cloudConfig.usersBin),
+    ]);
+    allResidents = rRes.record.residents || [];
+    allUsers     = uRes.record.users     || [];
+    saveLocal();
+    setSyncStatus('ok', `Synced ${fmtTime()}`);
+    renderResidentList(allResidents);
+    return true;
+  } catch(e) {
+    setSyncStatus('error', 'Sync failed');
+    console.warn('Pull error:', e);
+    return false;
+  }
+}
+
+async function pushCloud() {
+  if (!isCloudReady()) return;
+  setSyncStatus('syncing', 'Saving…');
+  try {
+    await Promise.all([
+      binFetch(cloudConfig.residentsBin, 'PUT', { residents: allResidents }),
+      binFetch(cloudConfig.usersBin,     'PUT', { users: allUsers }),
+    ]);
+    setSyncStatus('ok', `Saved ${fmtTime()}`);
+  } catch(e) {
+    setSyncStatus('error', 'Save failed — data kept locally');
+    console.warn('Push error:', e);
+  }
+}
+
+/* ─── Setup / Connect ─── */
+async function connectCloud() {
+  const key = document.getElementById('setup-key').value.trim();
+  const errEl = document.getElementById('setup-error');
+  if (!key) { errEl.textContent = 'Please paste your Master Key.'; errEl.style.display='block'; return; }
+
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#setup-modal .btn-primary');
+  btn.textContent = 'Connecting…'; btn.disabled = true;
+
+  try {
+    // Temporarily set key to test it
+    cloudConfig.apiKey = key;
+    // Create both bins
+    const rBinId = await createBin('ALFRD-Residents', { residents: SEED_RESIDENTS });
+    const uBinId = await createBin('ALFRD-Users',     { users: SEED_USERS });
+
+    cloudConfig.residentsBin = rBinId;
+    cloudConfig.usersBin     = uBinId;
+    localStorage.setItem('alfrd_apiKey',  key);
+    localStorage.setItem('alfrd_resBin',  rBinId);
+    localStorage.setItem('alfrd_usersBin',uBinId);
+
+    allResidents = [...SEED_RESIDENTS];
+    allUsers     = [...SEED_USERS];
+    saveLocal();
+    closeSetup();
+    startSyncInterval();
+    showToast('✓ Cloud connected & data initialized', 'success');
+    renderSyncBars();
+  } catch(e) {
+    errEl.textContent = 'Could not connect. Check your API key and try again.';
+    errEl.style.display = 'block';
+    cloudConfig.apiKey = '';
+  }
+  btn.textContent = 'Connect & Initialize'; btn.disabled = false;
+}
+
+function openSetup() { document.getElementById('setup-modal').classList.add('open'); }
+function closeSetup() { document.getElementById('setup-modal').classList.remove('open'); }
+
+function startSyncInterval() {
+  if (syncInterval) clearInterval(syncInterval);
+  // Pull every 90 seconds when app is in foreground
+  syncInterval = setInterval(() => {
+    if (currentUser) pullCloud();
+  }, 90000);
+  // Also pull on tab focus
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentUser) pullCloud();
+  });
+}
+
+/* ─── Local Fallback ─── */
+function saveLocal() {
+  localStorage.setItem('alfrd_residents', JSON.stringify(allResidents));
+  localStorage.setItem('alfrd_users',     JSON.stringify(allUsers));
+}
+
+function loadLocal() {
+  const r = localStorage.getItem('alfrd_residents');
+  const u = localStorage.getItem('alfrd_users');
+  if (r) allResidents = JSON.parse(r);
+  else   allResidents = [...SEED_RESIDENTS];
+  if (u) allUsers     = JSON.parse(u);
+  else   allUsers     = [...SEED_USERS];
+}
+
+/* ─── Sync status bars rendered into headers ─── */
+function renderSyncBars() {
+  const barHtml = `
+    <div class="sync-bar">
+      <div class="sync-dot ${isCloudReady()?'ok':''}"></div>
+      <span class="sync-label">${isCloudReady()?'Ready':'Offline — '}
+        ${isCloudReady()?'':''}</span>
+      ${!isCloudReady()
+        ? `<span class="sync-setup-link" onclick="openSetup()">Connect Cloud Sync</span>`
+        : ''}
+      <div class="sync-spacer"></div>
+      ${isCloudReady()
+        ? `<span class="sync-label" style="font-size:10px;"></span>`
+        : ''}
+    </div>`;
+
+  ['screen-search','screen-reports','screen-users'].forEach(sid => {
+    const s = document.getElementById(sid);
+    if (!s) return;
+    const existing = s.querySelector('.sync-bar');
+    if (existing) existing.remove();
+    const header = s.querySelector('.app-header');
+    if (header) header.insertAdjacentHTML('afterend', barHtml);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   PIN HASHING (lightweight — SHA-256 via Web Crypto)
+═══════════════════════════════════════════════════════ */
+function hashPin(pin) {
+  // Synchronous-style simple hash for demo; real impl uses crypto.subtle below
+  // We store hashes as a promise-resolved value using async login flow
+  return 'hash:' + pin; // placeholder; replaced by async version in doLogin
+}
+
+async function hashPinAsync(pin) {
+  const msgBuffer = new TextEncoder().encode('ALFRD::' + pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function pinMatchesUser(pin, user) {
+  // Support both legacy 'hash:PIN' format and real SHA-256
+  if (user.pinHash.startsWith('hash:')) {
+    return user.pinHash === 'hash:' + pin;
+  }
+  const hashed = await hashPinAsync(pin);
+  return hashed === user.pinHash;
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════════════ */
+async function doLogin() {
+  const nameInput = document.getElementById('login-name').value.trim();
+  const dept      = document.getElementById('login-dept').value;
+  const pin       = document.getElementById('login-pin').value.trim();
+  const err       = document.getElementById('login-error');
+
+  if (!nameInput || !dept || !pin) {
+    err.textContent = 'Please fill in all fields.';
+    err.classList.add('show'); return;
+  }
+
+  // Find matching user: same name (case-insensitive) + dept + PIN
+  const match = allUsers.find(u =>
+    u.active &&
+    u.name.toLowerCase() === nameInput.toLowerCase() &&
+    u.dept === dept
+  );
+
+  if (!match) {
+    err.textContent = 'No account found. Contact your administrator.';
+    err.classList.add('show');
+    document.getElementById('login-pin').value = '';
+    return;
+  }
+
+  const pinOk = await pinMatchesUser(pin, match);
+  if (!pinOk) {
+    err.textContent = 'Incorrect PIN. Please try again.';
+    err.classList.add('show');
+    document.getElementById('login-pin').value = '';
+    return;
+  }
+
+  err.classList.remove('show');
+  currentUser = { id: match.id, name: match.name, dept: match.dept, role: match.role };
+  applyDeptTheme(dept);
+  updateHeaders();
+  renderSyncBars();
+
+  // Admin nav tab
+  const adminTabs = document.querySelectorAll('.nav-tab-users');
+  adminTabs.forEach(t => t.classList.toggle('visible', match.role === 'admin'));
+
+  // Pull latest from cloud
+  if (isCloudReady()) {
+    setSyncStatus('syncing', 'Loading…');
+    await pullCloud();
+    startSyncInterval();
+  }
+
+  renderResidentList(allResidents);
+  showScreen('screen-search');
+  switchNav('residents');
+}
+
+function doLogout() {
+  currentUser = null;
+  if (syncInterval) clearInterval(syncInterval);
+  ['login-pin','login-name'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('login-dept').value = '';
+  showScreen('screen-login');
+}
+
+function updateHeaders() {
+  if (!currentUser) return;
+  const { name, dept } = currentUser;
+  const label = DEPT_CONFIG[dept]?.label || dept;
+  ['header-dept-badge','report-dept-badge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+  ['header-user-name','form-user-name'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = name;
+  });
+  ['header-user-role','form-user-role'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════ */
+function applyDeptTheme(dept) {
+  const cfg = DEPT_CONFIG[dept] || {};
+  document.documentElement.style.setProperty('--dept-color',       cfg.color || 'var(--amber)');
+  document.documentElement.style.setProperty('--dept-focus-color', cfg.color || 'var(--amber)');
+  document.documentElement.style.setProperty('--dept-focus-glow',  cfg.glow  || 'var(--amber-glow)');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCREEN NAV
+═══════════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  showScreen('screen-search');
+  document.getElementById('search-input').value = '';
+  filterResidents('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESIDENT LIST
+═══════════════════════════════════════════════════════ */
+function renderResidentList(list) {
+  const container = document.getElementById('resident-list');
+  const sorted = [...list].sort((a,b) => a.last.localeCompare(b.last));
+  if (!sorted.length) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">🏠</div><div class="es-text">No residents yet</div></div>`;
+    return;
+  }
+  container.innerHTML = sorted.map(r => {
+    const initials   = (r.first[0]||'') + (r.last[0]||'');
+    const alertDots  = (r.alerts||[]).map(a =>
+      `<div class="alert-dot ${a.type==='warn'?'warn':''}"></div>`
+    ).join('');
+    return `
+      <div class="resident-card" onclick="openResident('${r.id}')">
+        <div class="resident-avatar">${initials}</div>
+        <div class="resident-info">
+          <div class="resident-name">${r.last}, ${r.first}</div>
+          <div class="resident-meta">Room ${r.room} · ${r.care}</div>
+        </div>
+        <div class="resident-alerts">${alertDots}</div>
+        <div class="resident-arrow">›</div>
+      </div>`;
+  }).join('');
+}
+
+function filterResidents(q) {
+  const lower = q.toLowerCase();
+  const filtered = allResidents.filter(r =>
+    `${r.first} ${r.last}`.toLowerCase().includes(lower) ||
+    (r.room||'').toLowerCase().includes(lower)
+  );
+  renderResidentList(filtered);
+}
+
+/* ═══════════════════════════════════════════════════════
+   OPEN RESIDENT
+═══════════════════════════════════════════════════════ */
+function openResident(id) {
+  currentResident = allResidents.find(r => r.id === id);
+  if (!currentResident) return;
+  const r = currentResident;
+
+  document.getElementById('banner-avatar').textContent = (r.first[0]||'') + (r.last[0]||'');
+  document.getElementById('banner-name').textContent   = `${r.first} ${r.last}`;
+  document.getElementById('banner-meta').textContent   = `Room ${r.room} · ${r.care} · DOB ${formatDate(r.dob)}`;
+
+  const alertsEl = document.getElementById('banner-alerts');
+  alertsEl.innerHTML = (r.alerts||[]).map(a =>
+    `<div class="banner-alert-chip ${a.type==='warn'?'warn':''}">${a.text}</div>`
+  ).join('');
+
+  const urgents = (r.alerts||[]).filter(a => a.type === 'urgent');
+  const strip   = document.getElementById('alert-strip');
+  if (urgents.length) {
+    document.getElementById('alert-strip-text').textContent = urgents.map(a=>a.text).join(' · ');
+    strip.classList.remove('hidden');
+  } else {
+    strip.classList.add('hidden');
+  }
+
+  // Populate core fields
+  document.getElementById('core-first').value     = r.first     || '';
+  document.getElementById('core-last').value      = r.last      || '';
+  document.getElementById('core-room').value      = r.room      || '';
+  document.getElementById('core-dob').value       = r.dob       || '';
+  document.getElementById('core-physician').value = r.physician || '';
+  document.getElementById('core-notes').value     = r.notes     || '';
+
+  buildDeptTabs();
+  switchTab('core');
+  showScreen('screen-form');
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${m}/${day}/${y}`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DEPT TABS
+═══════════════════════════════════════════════════════ */
+function buildDeptTabs() {
+  const dept = currentUser.dept;
+  const tabs = ROLE_TABS[dept] || ['core'];
+  const wrap = document.getElementById('dept-tabs');
+  wrap.innerHTML = tabs.map(t => {
+    const isCore = t === 'core';
+    const cfg = isCore ? { label:'Core', icon:'📋' } : DEPT_CONFIG[t];
+    return `
+      <div class="dept-tab" id="tab-btn-${t}" onclick="switchTab('${t}')"
+           style="${isCore?'':` --dept-active-color:${cfg.color}`}">
+        <div class="dept-tab-icon">${cfg.icon}</div>
+        <div class="dept-tab-label">${cfg.label}</div>
+      </div>`;
+  }).join('');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.dept-tab').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`tab-btn-${name}`);
+  if (btn) btn.classList.add('active');
+
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`panel-${name}`);
+  if (panel) panel.classList.add('active');
+
+  document.getElementById('form-body').scrollTop = 0;
+
+  const color = name==='core' ? 'var(--amber)' : (DEPT_CONFIG[name]?.color || 'var(--amber)');
+  const glow  = name==='core' ? 'var(--amber-glow)' : (DEPT_CONFIG[name]?.glow || 'var(--amber-glow)');
+  document.getElementById('resident-banner').style.setProperty('--dept-color', color);
+  document.documentElement.style.setProperty('--dept-focus-color', color);
+  document.documentElement.style.setProperty('--dept-focus-glow', glow);
+  activeTab = name;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SAVE RECORD
+═══════════════════════════════════════════════════════ */
+async function saveRecord() {
+  if (!currentResident) return;
+
+  // Write core fields back to resident
+  currentResident.first     = document.getElementById('core-first').value.trim();
+  currentResident.last      = document.getElementById('core-last').value.trim();
+  currentResident.room      = document.getElementById('core-room').value.trim();
+  currentResident.dob       = document.getElementById('core-dob').value;
+  currentResident.physician = document.getElementById('core-physician').value.trim();
+  currentResident.notes     = document.getElementById('core-notes').value.trim();
+  currentResident.updatedAt = new Date().toISOString();
+  currentResident.updatedBy = currentUser.name;
+
+  // Upsert in array
+  const idx = allResidents.findIndex(r => r.id === currentResident.id);
+  if (idx >= 0) allResidents[idx] = currentResident;
+  else allResidents.push(currentResident);
+
+  saveLocal();
+  showToast('✓ Saved locally…', 'success');
+
+  if (isCloudReady()) await pushCloud();
+  else showToast('✓ Saved (offline — will sync when connected)', 'success');
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════════════════════ */
+let reportPeriod = 'today';
+
+function switchNav(tab) {
+  if (tab === 'reports') {
+    generateReport(reportPeriod);
+    showScreen('screen-reports');
+    if (isCloudReady()) pullCloud();
+  } else if (tab === 'users') {
+    if (currentUser?.role !== 'admin') return;
+    renderUserList();
+    showScreen('screen-users');
+  } else {
+    document.getElementById('search-input').value = '';
+    filterResidents('');
+    showScreen('screen-search');
+    if (isCloudReady()) pullCloud();
+  }
+  // Sync nav indicators
+  document.querySelectorAll('[id^="nav-"],[id^="rnav-"]').forEach(el => {
+    const isActive =
+      (tab==='residents' && el.id.includes('residents')) ||
+      (tab==='reports'   && el.id.includes('reports'))   ||
+      (tab==='users'     && el.id.includes('users'));
+    el.classList.toggle('active', isActive);
+  });
+}
+
+function setPeriod(p) {
+  reportPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.period === p));
+  generateReport(p);
+}
+
+/* ═══════════════════════════════════════════════════════
+   USER MANAGEMENT
+═══════════════════════════════════════════════════════ */
+function renderUserList() {
+  const container = document.getElementById('user-list');
+  if (!allUsers.length) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">👥</div><div class="es-text">No users yet</div></div>`;
+    return;
+  }
+  const sorted = [...allUsers].sort((a,b) => a.name.localeCompare(b.name));
+  container.innerHTML = sorted.map(u => {
+    const cfg = DEPT_CONFIG[u.dept] || {};
+    const roleColor = u.role==='admin'?'var(--amber)':u.role==='supervisor'?'var(--sky)':'var(--muted)';
+    return `
+      <div class="resident-card" onclick="openEditUser('${u.id}')">
+        <div class="resident-avatar" style="color:${cfg.color||'var(--amber)'}">
+          ${u.name.split(' ').map(n=>n[0]).slice(0,2).join('')}
+        </div>
+        <div class="resident-info">
+          <div class="resident-name">${u.name}</div>
+          <div class="resident-meta">${cfg.icon||''} ${cfg.label||u.dept}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div class="rr-badge info" style="color:${roleColor};background:none;border-color:${roleColor}33">
+            ${u.role}
+          </div>
+          <div class="rr-badge ${u.active?'ok':'urgent'}" style="font-size:9px;">
+            ${u.active?'Active':'Inactive'}
+          </div>
+        </div>
+        <div class="resident-arrow">›</div>
+      </div>`;
+  }).join('');
+}
+
+function openAddUser() {
+  editingUserId = null;
+  document.getElementById('user-modal-title').textContent = 'Add Staff Account';
+  document.getElementById('um-name').value = '';
+  document.getElementById('um-dept').value = 'clinical';
+  document.getElementById('um-pin').value  = '';
+  document.getElementById('um-role').value = 'staff';
+  document.getElementById('um-error').style.display = 'none';
+  document.querySelector('#user-modal .btn-save').textContent = 'Save Staff';
+  showUserModal();
+}
+
+function openEditUser(id) {
+  const user = allUsers.find(u => u.id === id);
+  if (!user) return;
+  editingUserId = id;
+  document.getElementById('user-modal-title').textContent = 'Edit Staff Account';
+  document.getElementById('um-name').value = user.name;
+  document.getElementById('um-dept').value = user.dept;
+  document.getElementById('um-pin').value  = '';
+  document.getElementById('um-role').value = user.role;
+  document.getElementById('um-error').style.display = 'none';
+  document.querySelector('#user-modal .btn-save').textContent = 'Update Staff';
+
+  // Add deactivate option for non-self users
+  const deactivateHtml = (id !== currentUser?.id) ? `
+    <button class="btn-secondary" style="width:100%;margin-top:-4px;color:${user.active?'#fb7185':'#34d399'}"
+      onclick="toggleUserActive('${id}')">
+      ${user.active ? '🚫 Deactivate Account' : '✓ Reactivate Account'}
+    </button>` : '';
+  document.getElementById('um-error').insertAdjacentHTML('afterend', deactivateHtml);
+  // Remove any leftover deactivate buttons on re-open
+  document.querySelectorAll('#user-modal .btn-secondary:not([onclick="closeUserModal()"])').forEach((b,i) => {
+    if (i>0) b.remove();
+  });
+  const extras = document.querySelectorAll('#user-modal .btn-secondary');
+  extras.forEach(b => { if(b.textContent.includes('Deactivate')||b.textContent.includes('Reactivate')) b.remove(); });
+  if (deactivateHtml) {
+    document.querySelector('#user-modal > div > div:last-child').insertAdjacentHTML('beforeend', deactivateHtml);
+  }
+  showUserModal();
+}
+
+function showUserModal() {
+  const m = document.getElementById('user-modal');
+  m.style.display = 'flex';
+}
+
+function closeUserModal() {
+  document.getElementById('user-modal').style.display = 'none';
+  editingUserId = null;
+}
+
+async function saveUser() {
+  const name = document.getElementById('um-name').value.trim();
+  const dept = document.getElementById('um-dept').value;
+  const pin  = document.getElementById('um-pin').value.trim();
+  const role = document.getElementById('um-role').value;
+  const errEl = document.getElementById('um-error');
+
+  if (!name || !dept) {
+    errEl.textContent = 'Name and department are required.'; errEl.style.display='block'; return;
+  }
+
+  // PIN required for new users, optional for edits
+  if (!editingUserId && !pin) {
+    errEl.textContent = 'PIN is required for new accounts.'; errEl.style.display='block'; return;
+  }
+  if (pin && (pin.length < 4 || !/^\d+$/.test(pin))) {
+    errEl.textContent = 'PIN must be 4–6 digits.'; errEl.style.display='block'; return;
+  }
+
+  errEl.style.display = 'none';
+
+  if (editingUserId) {
+    const idx = allUsers.findIndex(u => u.id === editingUserId);
+    if (idx >= 0) {
+      allUsers[idx].name = name;
+      allUsers[idx].dept = dept;
+      allUsers[idx].role = role;
+      if (pin) allUsers[idx].pinHash = await hashPinAsync(pin);
+      allUsers[idx].updatedAt = new Date().toISOString();
+    }
+    showToast('✓ Staff account updated', 'success');
+  } else {
+    // Check duplicate name + dept
+    const dup = allUsers.find(u => u.name.toLowerCase()===name.toLowerCase() && u.dept===dept);
+    if (dup) { errEl.textContent='An account with this name and department already exists.'; errEl.style.display='block'; return; }
+    const pinHash = await hashPinAsync(pin);
+    allUsers.push({ id:'u'+Date.now(), name, dept, role, pinHash, active:true, createdAt: new Date().toISOString() });
+    showToast('✓ Staff account created', 'success');
+  }
+
+  saveLocal();
+  if (isCloudReady()) pushCloud();
+  closeUserModal();
+  renderUserList();
+}
+
+async function toggleUserActive(id) {
+  const idx = allUsers.findIndex(u => u.id === id);
+  if (idx<0) return;
+  allUsers[idx].active = !allUsers[idx].active;
+  saveLocal();
+  if (isCloudReady()) pushCloud();
+  closeUserModal();
+  renderUserList();
+  showToast(allUsers[idx].active ? '✓ Account reactivated' : 'Account deactivated', 'success');
+}
+
+/* ═══════════════════════════════════════════════════════
+   INTERACTIONS
+═══════════════════════════════════════════════════════ */
+function toggleSwitch(el) { el.classList.toggle('on'); }
+function toggleChip(el)   { el.classList.toggle('selected'); }
+
+function selectScale(groupId, el) {
+  document.querySelectorAll(`#${groupId} .scale-btn`).forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST & UTILS
+═══════════════════════════════════════════════════════ */
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type?' '+type:'');
+  setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+function fmtTime() {
+  return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════ */
+(function boot() {
+  loadLocal();
+
+  // If cloud was previously configured, attempt pull
+  if (isCloudReady()) {
+    startSyncInterval();
+    pullCloud();
+  }
+
+  // Keyboard shortcuts
+  document.getElementById('login-pin').addEventListener('keydown', e => {
+    if (e.key==='Enter') doLogin();
+  });
+  document.getElementById('login-name').addEventListener('keydown', e => {
+    if (e.key==='Enter') document.getElementById('login-dept').focus();
+  });
+
+  // Add Users nav tab to both nav bars if admin role exists
+  // (shown/hidden after login)
+  ['screen-search','screen-reports'].forEach(sid => {
+    const nav = document.querySelector(`#${sid} .bottom-nav`);
+    if (!nav) return;
+    nav.insertAdjacentHTML('beforeend', `
+      <div class="nav-tab nav-tab-users" id="${sid}-nav-users" onclick="switchNav('users')">
+        <div class="nav-tab-icon">👥</div>
+        <div class="nav-tab-label">Users</div>
+      </div>`);
+  });
+})();
+
+/* ─── BOTTOM NAV ─── */
+let reportPeriod = 'today'; // 'today' | 'week'
+
+function switchNav(tab) {
+  if (tab === 'reports') {
+    generateReport(reportPeriod);
+    showScreen('screen-reports');
+    document.getElementById('report-dept-badge').textContent =
+      DEPT_CONFIG[currentUser.dept]?.label || 'Reports';
+  } else {
+    document.getElementById('search-input').value = '';
+    filterResidents('');
+    showScreen('screen-search');
+  }
+  // Sync both nav bars
+  ['nav-residents','nav-reports','rnav-residents','rnav-reports'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('active',
+      (tab === 'residents' && id.includes('residents')) ||
+      (tab === 'reports'   && id.includes('reports'))
+    );
+  });
+}
+
+function setPeriod(p) {
+  reportPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === p);
+  });
+  generateReport(p);
+}
+
+/* ─── REPORT GENERATOR ─── */
+function generateReport(period) {
+  const dept  = currentUser.dept;
+  const cfg   = DEPT_CONFIG[dept];
+  const now   = new Date();
+  const today = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const label = period === 'today' ? 'Today' : 'This Week';
+  const body  = document.getElementById('reports-body');
+
+  // Build period toggle HTML
+  const periodHtml = `
+    <div class="period-toggle">
+      <div class="period-btn ${period==='today'?'active':''}" data-period="today" onclick="setPeriod('today')">Today</div>
+      <div class="period-btn ${period==='week'?'active':''}" data-period="week" onclick="setPeriod('week')">This Week</div>
+    </div>`;
+
+  // Report header
+  const headerHtml = `
+    <div class="report-header-card">
+      <div class="rhc-inner">
+        <div class="report-dept">${cfg.icon} ${cfg.label} Report</div>
+        <div class="report-meta">${today} · ${currentUser.name} · ${label}</div>
+      </div>
+    </div>`;
+
+  // Build dept-specific content
+  const content = buildDeptReport(dept, period);
+
+  body.innerHTML = periodHtml + headerHtml + content;
+}
+
+function buildDeptReport(dept, period) {
+  const R = RESIDENTS; // use full resident list
+
+  // ── Helpers ──
+  const activeResidents = R.filter(r => r.care !== 'Discharged');
+  const memCare   = R.filter(r => r.care === 'Memory Care');
+  const skilled   = R.filter(r => r.care === 'Skilled Nursing');
+  const withAlerts = R.filter(r => r.alerts.length > 0);
+  const urgents   = R.filter(r => r.alerts.some(a => a.type === 'urgent'));
+
+  const residentRow = (r, detail, badge, badgeType='info') => `
+    <div class="report-row" onclick="openResident(${r.id}); switchNav('residents');">
+      <div class="rr-avatar">${r.first[0]}${r.last[0]}</div>
+      <div class="rr-info">
+        <div class="rr-name">${r.last}, ${r.first} &nbsp;<span style="font-weight:400;color:var(--muted);font-size:11px">Rm ${r.room}</span></div>
+        <div class="rr-detail">${detail}</div>
+      </div>
+      ${badge ? `<div class="rr-badge ${badgeType}">${badge}</div>` : ''}
+    </div>`;
+
+  const section = (title, rows) => `
+    <div class="report-section">
+      <div class="report-section-title">${title}</div>
+      ${rows || `<div class="report-empty">No items to report</div>`}
+    </div>`;
+
+  const stats = (items) => `
+    <div class="stat-row">
+      ${items.map(([num,lbl]) => `
+        <div class="stat-card">
+          <div class="stat-num">${num}</div>
+          <div class="stat-label">${lbl}</div>
+        </div>`).join('')}
+    </div>`;
+
+  // ── Per-dept reports ──
+  switch(dept) {
+
+    case 'clinical': return `
+      ${stats([
+        [activeResidents.length, 'Total Census'],
+        [urgents.length, 'Urgent Alerts'],
+        [withAlerts.length, 'Active Flags'],
+      ])}
+      ${section('⚠️ Urgent Clinical Alerts',
+        urgents.map(r =>
+          residentRow(r,
+            r.alerts.filter(a=>a.type==='urgent').map(a=>a.text).join(' · '),
+            'URGENT', 'urgent')
+        ).join('') || ''
+      )}
+      ${section('⚡ All Active Alerts',
+        withAlerts.map(r =>
+          residentRow(r,
+            r.alerts.map(a=>a.text).join(' · '),
+            r.alerts.some(a=>a.type==='urgent') ? 'Urgent' : 'Watch',
+            r.alerts.some(a=>a.type==='urgent') ? 'urgent' : 'warn')
+        ).join('') || ''
+      )}
+      ${section('🩺 Memory Care Residents',
+        memCare.map(r =>
+          residentRow(r, r.care + ' · ' + r.physician, 'Mem Care', 'info')
+        ).join('') || ''
+      )}
+      ${section('🏥 Skilled Nursing Residents',
+        skilled.map(r =>
+          residentRow(r, r.care + ' · ' + r.physician, 'Skilled', 'warn')
+        ).join('') || ''
+      )}`;
+
+    case 'dining': return `
+      ${stats([
+        [activeResidents.length, 'Residents'],
+        [3, 'Special Diets'],
+        [2, 'Tray Delivery'],
+      ])}
+      ${section('🚨 Allergy & Diet Alerts',
+        withAlerts.filter(r=>r.care==='Skilled Nursing' || r.care==='Memory Care').map(r=>
+          residentRow(r, 'Review diet profile before service', 'Review', 'warn')
+        ).join('') || ''
+      )}
+      ${section('🍽 All Residents — Diet Summary',
+        activeResidents.map(r =>
+          residentRow(r, r.care + ' · Physician: ' + r.physician, 'Regular', 'ok')
+        ).join('') || ''
+      )}`;
+
+    case 'housekeeping': return `
+      ${stats([
+        [activeResidents.length, 'Rooms'],
+        [activeResidents.length, 'Pending'],
+        [0, 'Completed'],
+      ])}
+      ${section('🔴 Do Not Enter',
+        memCare.slice(0,1).map(r =>
+          residentRow(r, 'DNE until 10:00 AM — resident sleeping', 'DNE', 'urgent')
+        ).join('') || ''
+      )}
+      ${section('🧹 Room Service Schedule',
+        activeResidents.map((r,i) =>
+          residentRow(r, `Room ${r.room} · ${i < 3 ? 'Full clean' : 'Daily tidy'}`,
+            i < 3 ? 'Pending' : 'Pending', 'info')
+        ).join('') || ''
+      )}`;
+
+    case 'maintenance': return `
+      ${stats([
+        [3, 'Open Orders'],
+        [1, 'Urgent'],
+        [2, 'In Progress'],
+      ])}
+      ${section('🔴 Urgent / Safety Work Orders',
+        [R[3]].map(r =>
+          residentRow(r, `Room ${r.room} · Call light not working — safety issue`, 'URGENT', 'urgent')
+        ).join('') || ''
+      )}
+      ${section('🔧 Open Work Orders',
+        [R[0], R[2], R[4]].map((r,i) =>
+          residentRow(r,
+            [`Room ${r.room} · HVAC thermostat unresponsive`,
+             `Room ${r.room} · Bathroom faucet dripping`,
+             `Room ${r.room} · Window latch loose`][i],
+            ['In Progress','Open','Open'][i],
+            ['warn','info','info'][i])
+        ).join('') || ''
+      )}`;
+
+    case 'concierge': return `
+      ${stats([
+        [5, 'Family Visits'],
+        [3, 'Transport Needed'],
+        [activeResidents.length, 'Residents'],
+      ])}
+      ${section('🚗 Transportation Requests',
+        [R[0],R[2],R[4]].map((r,i) =>
+          residentRow(r,
+            ['Dr. Patel appt — 2:00 PM · Wheelchair needed',
+             'Hair salon — 11:00 AM',
+             'Eye exam — 9:30 AM · Family driving'][i],
+            'Transport', 'info')
+        ).join('') || ''
+      )}
+      ${section('👨‍👩‍👧 Family Visit Log',
+        [R[0],R[1],R[3],R[6]].map((r,i) =>
+          residentRow(r,
+            ['Daughter visited · 2 hrs · Good mood',
+             'Son called — checked in by phone',
+             'Wife + son visited · 3 hrs',
+             'Niece visited · 1 hr · Brought flowers'][i],
+            'Logged', 'ok')
+        ).join('') || ''
+      )}`;
+
+    case 'activities': return `
+      ${stats([
+        [6, 'Programs Today'],
+        [activeResidents.length, 'Residents'],
+        [5, 'Participated'],
+      ])}
+      ${section('📅 Today\'s Programs',
+        [
+          ['9:00 AM', 'Morning Stretch', '6 attended'],
+          ['10:30 AM', 'Bingo', '8 attended'],
+          ['2:00 PM', 'Art Class', '4 attended'],
+          ['3:30 PM', 'Music Hour', '7 attended'],
+          ['4:30 PM', 'Happy Hour Social', '10 attended'],
+          ['7:00 PM', 'Movie Night', 'Upcoming'],
+        ].map(([time, prog, note]) => `
+          <div class="report-row">
+            <div class="rr-avatar" style="font-size:10px;font-weight:700;">${time.replace(' ','<br>')}</div>
+            <div class="rr-info">
+              <div class="rr-name">${prog}</div>
+              <div class="rr-detail">${note}</div>
+            </div>
+            <div class="rr-badge ${note==='Upcoming'?'info':'ok'}">${note==='Upcoming'?'Soon':'Done'}</div>
+          </div>`).join('')
+      )}
+      ${section('⭐ Resident Engagement',
+        activeResidents.map((r,i) =>
+          residentRow(r,
+            ['Attended 3 of 5 programs · High engagement',
+             'Music only · Declined group activities',
+             'Attended all morning programs',
+             'Bed rest today — 1-on-1 visit done',
+             'Bingo + Social · Good spirits',
+             'Art class · Excellent engagement',
+             'Attended all 5 programs · Star participant',
+             'Missed AM · Attended PM social'][i] || 'No activity recorded',
+            ['Active','Low','Active','1-on-1','Active','Active','Active','Partial'][i] || 'N/A',
+            ['ok','warn','ok','info','ok','ok','ok','info'][i] || 'info')
+        ).join('') || ''
+      )}`;
+
+    case 'laundry': return `
+      ${stats([
+        [activeResidents.length, 'Residents'],
+        [5, 'Pickups Today'],
+        [0, 'Missing Items'],
+      ])}
+      ${section('📋 Laundry Status',
+        activeResidents.map((r,i) =>
+          residentRow(r,
+            [`Room ${r.room} · ` + ['Picked up · In wash','Returned · Complete','Scheduled pickup PM','Returned · Complete','Picked up · Drying','Scheduled pickup AM','Returned · Complete','No pickup today'][i],
+            ][0],
+            ['In Wash','Done','Pending','Done','Drying','Pending','Done','—'][i],
+            ['info','ok','warn','ok','info','warn','ok','info'][i])
+        ).join('') || ''
+      )}`;
+
+    case 'sales': return `
+      ${stats([
+        [activeResidents.length, 'Occupied'],
+        [2, 'Prospects'],
+        [1, 'Tours Today'],
+      ])}
+      ${section('📈 Occupancy Snapshot',
+        [
+          ['Total Units', '24'],
+          ['Occupied', String(activeResidents.length)],
+          ['Available', String(24 - activeResidents.length)],
+          ['Occupancy Rate', Math.round(activeResidents.length/24*100)+'%'],
+        ].map(([label, val]) => `
+          <div class="report-row">
+            <div class="rr-info"><div class="rr-name">${label}</div></div>
+            <div class="rr-badge info">${val}</div>
+          </div>`).join('')
+      )}
+      ${section('🗓 Tours & Prospects',
+        [
+          ['Smith Family', 'In-person tour · 2:00 PM', 'Today'],
+          ['Johnson, M.', 'Phone inquiry · Follow-up needed', 'Pending'],
+        ].map(([name, detail, badge]) => `
+          <div class="report-row">
+            <div class="rr-avatar">${name[0]}</div>
+            <div class="rr-info">
+              <div class="rr-name">${name}</div>
+              <div class="rr-detail">${detail}</div>
+            </div>
+            <div class="rr-badge info">${badge}</div>
+          </div>`).join('')
+      )}
+      ${section('📋 Recent Move-Ins / Move-Outs',
+        [R[0], R[4]].map((r,i) =>
+          residentRow(r,
+            [r.first+' '+r.last+' · Move-in 3/28 · Assisted Living',
+             r.first+' '+r.last+' · Move-in 3/15 · Independent'][i],
+            'Move-In', 'ok')
+        ).join('') || ''
+      )}`;
+
+    case 'admin': return `
+      ${stats([
+        [activeResidents.length, 'Census'],
+        [urgents.length, 'Open Flags'],
+        [1, 'Compliance Due'],
+      ])}
+      ${section('🔴 Active Clinical Alerts (All Depts)',
+        urgents.map(r =>
+          residentRow(r,
+            r.alerts.filter(a=>a.type==='urgent').map(a=>a.text).join(' · '),
+            'Urgent', 'urgent')
+        ).join('') || ''
+      )}
+      ${section('🛡 Compliance Items Due',
+        [
+          ['Annual Care Plan Reviews', '3 due this week', 'Due Soon'],
+          ['Resident Rights Acknowledgment', '1 missing signature', 'Missing'],
+          ['Fire Drill Documentation', 'Completed March 2025', 'OK'],
+        ].map(([title, detail, badge]) => `
+          <div class="report-row">
+            <div class="rr-info">
+              <div class="rr-name">${title}</div>
+              <div class="rr-detail">${detail}</div>
+            </div>
+            <div class="rr-badge ${badge==='OK'?'ok':badge==='Missing'?'urgent':'warn'}">${badge}</div>
+          </div>`).join('')
+      )}
+      ${section('💳 Billing Snapshot',
+        activeResidents.slice(0,4).map((r,i) =>
+          residentRow(r,
+            ['Private Pay · Current','LTC Insurance · Pending claim','Private Pay · Current','VA Benefits · Current'][i],
+            ['Current','Pending','Current','Current'][i],
+            ['ok','warn','ok','ok'][i])
+        ).join('') || ''
+      )}
+      ${section('📊 Full Census',
+        activeResidents.map(r =>
+          residentRow(r, `Room ${r.room} · ${r.care} · ${r.physician}`, 'Active', 'ok')
+        ).join('') || ''
+      )}`;
+
+    default: return `<div class="report-empty">No report configured for this department.</div>`;
+  }
+}
+</script>
+
+</body>
+</html>
