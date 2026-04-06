@@ -2502,43 +2502,6 @@ async function saveRecord() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   BOTTOM NAV
-═══════════════════════════════════════════════════════ */
-let reportPeriod = 'today';
-
-function switchNav(tab) {
-  if (tab === 'reports') {
-    generateReport(reportPeriod);
-    showScreen('screen-reports');
-    if (isCloudReady()) pullCloud();
-  } else if (tab === 'users') {
-    if (currentUser?.role !== 'admin') return;
-    renderUserList();
-    showScreen('screen-users');
-  } else {
-    document.getElementById('search-input').value = '';
-    filterResidents('');
-    showScreen('screen-search');
-    if (isCloudReady()) pullCloud();
-  }
-  // Sync nav indicators
-  document.querySelectorAll('[id^="nav-"],[id^="rnav-"]').forEach(el => {
-    const isActive =
-      (tab==='residents' && el.id.includes('residents')) ||
-      (tab==='reports'   && el.id.includes('reports'))   ||
-      (tab==='users'     && el.id.includes('users'));
-    el.classList.toggle('active', isActive);
-  });
-}
-
-function setPeriod(p) {
-  reportPeriod = p;
-  document.querySelectorAll('.period-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.period === p));
-  generateReport(p);
-}
-
-/* ═══════════════════════════════════════════════════════
    USER MANAGEMENT
 ═══════════════════════════════════════════════════════ */
 function renderUserList() {
