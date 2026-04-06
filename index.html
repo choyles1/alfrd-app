@@ -2007,7 +2007,7 @@ const SEED_RESIDENTS = [
 // Default admin account (PIN: 1234) — hashed with simple SHA-256 substitute
 // Real PIN stored as hash; for demo we compare directly then hash on save
 const SEED_USERS = [
-  { id:'u1', name:'Administrator', dept:'admin', role:'admin', pinHash: hashPin('1234'), active:true, createdAt: new Date().toISOString() },
+  { id:'u1', name:'Administrator', dept:'admin', role:'admin', pinHash: 'hash:1234', active:true, createdAt: new Date().toISOString() },
 ];
 
 /* ─── STATE ─── */
@@ -2208,13 +2208,8 @@ function renderSyncBars() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   PIN HASHING (lightweight — SHA-256 via Web Crypto)
+   PIN HASHING (SHA-256 via Web Crypto)
 ═══════════════════════════════════════════════════════ */
-function hashPin(pin) {
-  // Synchronous-style simple hash for demo; real impl uses crypto.subtle below
-  // We store hashes as a promise-resolved value using async login flow
-  return 'hash:' + pin; // placeholder; replaced by async version in doLogin
-}
 
 async function hashPinAsync(pin) {
   const msgBuffer = new TextEncoder().encode('ALFRD::' + pin);
@@ -2224,12 +2219,17 @@ async function hashPinAsync(pin) {
 }
 
 async function pinMatchesUser(pin, user) {
-  // Support both legacy 'hash:PIN' format and real SHA-256
-  if (user.pinHash.startsWith('hash:')) {
+  // Legacy / seed format: 'hash:1234'
+  if (user.pinHash && user.pinHash.startsWith('hash:')) {
     return user.pinHash === 'hash:' + pin;
   }
-  const hashed = await hashPinAsync(pin);
-  return hashed === user.pinHash;
+  // Real SHA-256 hash
+  try {
+    const hashed = await hashPinAsync(pin);
+    return hashed === user.pinHash;
+  } catch(e) {
+    return false;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2246,15 +2246,27 @@ async function doLogin() {
     err.classList.add('show'); return;
   }
 
-  // Find matching user: same name (case-insensitive) + dept + PIN
+  // If no users exist yet, bootstrap the admin account
+  if (!allUsers.length) {
+    allUsers = [...SEED_USERS];
+    saveLocal();
+  }
+
+  // Find matching user: dept must match, name is case-insensitive partial match
   const match = allUsers.find(u =>
     u.active &&
-    u.name.toLowerCase() === nameInput.toLowerCase() &&
-    u.dept === dept
+    u.dept === dept &&
+    u.name.toLowerCase().trim() === nameInput.toLowerCase()
   );
 
   if (!match) {
-    err.textContent = 'No account found. Contact your administrator.';
+    // Give a helpful hint on first run
+    const hasAnyAdmin = allUsers.some(u => u.role === 'admin');
+    if (!hasAnyAdmin || dept === 'admin') {
+      err.textContent = 'Hint: Use name "Administrator", dept "Administration", PIN 1234';
+    } else {
+      err.textContent = 'No account found for that name and department. Contact your administrator.';
+    }
     err.classList.add('show');
     document.getElementById('login-pin').value = '';
     return;
@@ -2275,8 +2287,9 @@ async function doLogin() {
   renderSyncBars();
 
   // Admin nav tab
-  const adminTabs = document.querySelectorAll('.nav-tab-users');
-  adminTabs.forEach(t => t.classList.toggle('visible', match.role === 'admin'));
+  document.querySelectorAll('.nav-tab-users').forEach(t =>
+    t.classList.toggle('visible', match.role === 'admin')
+  );
 
   // Pull latest from cloud
   if (isCloudReady()) {
