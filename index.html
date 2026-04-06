@@ -1034,7 +1034,7 @@ html, body { height: auto !important; overflow: auto !important; }
           <option value="activities">🎨 Activities</option>
           <option value="laundry">👕 Laundry</option>
           <option value="sales">📣 Sales & Marketing</option>
-          <option value="admin">🏛 Administration</option>
+          <option value="admin">🏛 Admin</option>
         </select>
       </div>
       <div class="field-group">
@@ -1088,6 +1088,10 @@ html, body { height: auto !important; overflow: auto !important; }
       <div class="nav-tab-icon">📊</div>
       <div class="nav-tab-label">Reports</div>
     </div>
+    <div class="nav-tab nav-tab-users" id="nav-users" onclick="switchNav('users')">
+      <div class="nav-tab-icon">👥</div>
+      <div class="nav-tab-label">Users</div>
+    </div>
   </div>
 </div>
 
@@ -1118,6 +1122,10 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="nav-tab active" id="rnav-reports" onclick="switchNav('reports')">
       <div class="nav-tab-icon">📊</div>
       <div class="nav-tab-label">Reports</div>
+    </div>
+    <div class="nav-tab nav-tab-users" id="rnav-users" onclick="switchNav('users')">
+      <div class="nav-tab-icon">👥</div>
+      <div class="nav-tab-label">Users</div>
     </div>
   </div>
 </div>
@@ -1836,7 +1844,7 @@ html, body { height: auto !important; overflow: auto !important; }
           <option value="activities">🎨 Activities</option>
           <option value="laundry">👕 Laundry</option>
           <option value="sales">📣 Sales & Marketing</option>
-          <option value="admin">🏛 Administration</option>
+          <option value="admin">🏛 Admin</option>
         </select>
       </div>
       <div class="field-group">
@@ -1848,7 +1856,7 @@ html, body { height: auto !important; overflow: auto !important; }
         <select class="field-input" id="um-role">
           <option value="staff">Staff</option>
           <option value="supervisor">Supervisor</option>
-          <option value="admin">Administrator</option>
+          <option value="admin">Admin</option>
         </select>
       </div>
       <div id="um-error" style="color:#fb7185;font-size:13px;display:none;"></div>
@@ -2024,7 +2032,7 @@ const SEED_RESIDENTS = [
 // Default admin account (PIN: 1234) — hashed with simple SHA-256 substitute
 // Real PIN stored as hash; for demo we compare directly then hash on save
 const SEED_USERS = [
-  { id:'u1', name:'Administrator', dept:'admin', role:'admin', pinHash: 'hash:1234', active:true, createdAt: new Date().toISOString() },
+  { id:'u1', name:'Admin', dept:'admin', role:'admin', pinHash: 'hash:1234', active:true, createdAt: new Date().toISOString() },
 ];
 
 /* ─── STATE ─── */
@@ -2265,7 +2273,7 @@ function loginClick() {
 
   // Ensure seed users are loaded
   if (!allUsers || allUsers.length === 0) {
-    allUsers = [{ id:'u1', name:'Administrator', dept:'admin', role:'admin', pinHash:'hash:1234', active:true }];
+    allUsers = [{ id:'u1', name:'Admin', dept:'admin', role:'admin', pinHash:'hash:1234', active:true }];
     saveLocal();
   }
 
@@ -2281,7 +2289,7 @@ function loginClick() {
   }
 
   if (!match) {
-    err.textContent = 'No account found. First run: name "Administrator" / dept "Administration" / PIN 1234';
+    err.textContent = 'No account found. First run: name "Admin" / dept "Administration" / PIN 1234';
     err.classList.add('show');
     document.getElementById('login-pin').value = '';
     return;
@@ -2323,8 +2331,11 @@ function finishLogin(match) {
   updateHeaders();
   renderSyncBars();
 
-  document.querySelectorAll('.nav-tab-users').forEach(function(t) {
-    t.classList.toggle('visible', match.role === 'admin');
+  // Show Users tab for admins only
+  var isAdmin = match.role === 'admin';
+  ['nav-users', 'rnav-users'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('visible', isAdmin);
   });
 
   if (isCloudReady()) {
@@ -2734,32 +2745,18 @@ function fmtTime() {
 (function boot() {
   loadLocal();
 
-  // If cloud was previously configured, attempt pull
   if (isCloudReady()) {
     startSyncInterval();
-    pullCloud();
+    pullCloud().catch(function(){});
   }
 
-  // Keyboard shortcuts
-  document.getElementById('login-pin').addEventListener('keydown', e => {
-    if (e.key==='Enter') loginClick();
+  document.getElementById('login-pin').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') loginClick();
   });
-  document.getElementById('login-name').addEventListener('keydown', e => {
-    if (e.key==='Enter') document.getElementById('login-dept').focus();
+  document.getElementById('login-name').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('login-dept').focus();
   });
-
-  // Add Users nav tab to both nav bars if admin role exists
-  // (shown/hidden after login)
-  ['screen-search','screen-reports'].forEach(sid => {
-    const nav = document.querySelector(`#${sid} .bottom-nav`);
-    if (!nav) return;
-    nav.insertAdjacentHTML('beforeend', `
-      <div class="nav-tab nav-tab-users" id="${sid}-nav-users" onclick="switchNav('users')">
-        <div class="nav-tab-icon">👥</div>
-        <div class="nav-tab-label">Users</div>
-      </div>`);
-  });
-})();
+}());
 
 /* ─── BOTTOM NAV ─── */
 let reportPeriod = 'today'; // 'today' | 'week'
@@ -2769,8 +2766,9 @@ function switchNav(tab) {
     generateReport(reportPeriod);
     showScreen('screen-reports');
     var badge = document.getElementById('report-dept-badge');
-    if (badge && currentUser) badge.textContent = DEPT_CONFIG[currentUser.dept]
-      ? DEPT_CONFIG[currentUser.dept].label : 'Reports';
+    if (badge && currentUser && DEPT_CONFIG[currentUser.dept]) {
+      badge.textContent = DEPT_CONFIG[currentUser.dept].label;
+    }
     if (isCloudReady()) pullCloud().catch(function(){});
   } else if (tab === 'users') {
     if (!currentUser || currentUser.role !== 'admin') return;
@@ -2783,14 +2781,18 @@ function switchNav(tab) {
     if (isCloudReady()) pullCloud().catch(function(){});
   }
 
-  // Sync all nav tab active states
-  document.querySelectorAll('.nav-tab').forEach(function(el) {
-    var id = el.id || '';
-    var active =
-      (tab === 'residents' && (id === 'nav-residents' || id === 'rnav-residents')) ||
-      (tab === 'reports'   && (id === 'nav-reports'   || id === 'rnav-reports'))   ||
-      (tab === 'users'     && el.classList.contains('nav-tab-users'));
-    el.classList.toggle('active', active);
+  // Update nav active states using stable IDs
+  var navMap = {
+    'nav-residents':  tab === 'residents',
+    'nav-reports':    tab === 'reports',
+    'nav-users':      tab === 'users',
+    'rnav-residents': tab === 'residents',
+    'rnav-reports':   tab === 'reports',
+    'rnav-users':     tab === 'users',
+  };
+  Object.keys(navMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', navMap[id]);
   });
 }
 
