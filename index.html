@@ -5,7 +5,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ALFRD — Assisted Living Facility Resident Database</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" onerror="this.remove()">
+<style>
+  /* Font fallbacks if Google Fonts blocked */
+  :root {
+    --font-display: 'Syne', 'Trebuchet MS', 'Arial Black', sans-serif;
+    --font-body:    'Nunito', 'Segoe UI', system-ui, sans-serif;
+  }
+</style>
 <style>
 /* ═══════════════════════════════════════════════
    ROOT & RESET
@@ -49,7 +56,7 @@ html,body{height:100%;overflow:hidden;}
 body {
 background: var(–bg);
 color: var(–text);
-font-family: ‘Nunito’, sans-serif;
+font-family: var(–font-body);
 font-size: 15px;
 line-height: 1.5;
 }
@@ -1035,7 +1042,7 @@ html, body { height: auto !important; overflow: auto !important; }
         <input class="field-input" id="login-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="current-password">
       </div>
       <div class="login-error" id="login-error">Incorrect PIN. Please try again.</div>
-      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+      <button class="btn-primary" onclick="loginClick()">Sign In</button>
     </div>
   </div>
 </div>
@@ -1760,7 +1767,7 @@ html, body { height: auto !important; overflow: auto !important; }
 
   <div class="save-bar">
     <button class="btn-secondary" onclick="goBack()">← Back</button>
-    <button class="btn-save" id="btn-save" onclick="saveRecord()">Save Record</button>
+    <button class="btn-save" id="btn-save" onclick="saveClick()">Save Record</button>
   </div>
 
 </div><!-- /screen-form -->
@@ -1966,6 +1973,31 @@ html, body { height: auto !important; overflow: auto !important; }
    ALFRD — JavaScript Core
    Cloud Sync (JSONBin) + User/PIN Management + App Logic
 ═══════════════════════════════════════════════════════ */
+
+// Global error surface — catches silent async failures on GitHub Pages
+window.onerror = function(msg, src, line, col, err) {
+  console.error('ALFRD Error:', msg, 'Line:', line, err);
+  const errEl = document.getElementById('login-error');
+  if (errEl) {
+    errEl.textContent = 'App error: ' + msg + ' (line ' + line + ')';
+    errEl.classList.add('show');
+  }
+};
+window.onunhandledrejection = function(e) {
+  console.error('ALFRD Unhandled Promise:', e.reason);
+};
+
+// Safe async wrapper for onclick handlers
+function loginClick() {
+  doLogin().catch(e => {
+    console.error('Login error:', e);
+    const errEl = document.getElementById('login-error');
+    if (errEl) { errEl.textContent = 'Login error: ' + e.message; errEl.classList.add('show'); }
+  });
+}
+function saveClick() {
+  saveRecord().catch(e => console.error('Save error:', e));
+}
 
 /* ─── DEPARTMENT CONFIG ─── */
 const DEPT_CONFIG = {
@@ -2685,7 +2717,7 @@ function fmtTime() {
 
   // Keyboard shortcuts
   document.getElementById('login-pin').addEventListener('keydown', e => {
-    if (e.key==='Enter') doLogin();
+    if (e.key==='Enter') loginClick();
   });
   document.getElementById('login-name').addEventListener('keydown', e => {
     if (e.key==='Enter') document.getElementById('login-dept').focus();
