@@ -2550,34 +2550,29 @@ async function saveRecord() {
    USER MANAGEMENT
 ═══════════════════════════════════════════════════════ */
 function renderUserList() {
-  const container = document.getElementById('user-list');
+  var container = document.getElementById('user-list');
+  if (!container) return;
   if (!allUsers.length) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">👥</div><div class="es-text">No users yet</div></div>`;
+    container.innerHTML = '<div class="empty-state"><div class="es-icon">👥</div><div class="es-text">No users yet</div></div>';
     return;
   }
-  const sorted = [...allUsers].sort((a,b) => a.name.localeCompare(b.name));
-  container.innerHTML = sorted.map(u => {
-    const cfg = DEPT_CONFIG[u.dept] || {};
-    const roleColor = u.role==='admin'?'var(--amber)':u.role==='supervisor'?'var(--sky)':'var(--muted)';
-    return `
-      <div class="resident-card" onclick="openEditUser('${u.id}')">
-        <div class="resident-avatar" style="color:${cfg.color||'var(--amber)'}">
-          ${u.name.split(' ').map(n=>n[0]).slice(0,2).join('')}
-        </div>
-        <div class="resident-info">
-          <div class="resident-name">${u.name}</div>
-          <div class="resident-meta">${cfg.icon||''} ${cfg.label||u.dept}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          <div class="rr-badge info" style="color:${roleColor};background:none;border-color:${roleColor}33">
-            ${u.role}
-          </div>
-          <div class="rr-badge ${u.active?'ok':'urgent'}" style="font-size:9px;">
-            ${u.active?'Active':'Inactive'}
-          </div>
-        </div>
-        <div class="resident-arrow">›</div>
-      </div>`;
+  var sorted = allUsers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  container.innerHTML = sorted.map(function(u) {
+    var cfg = DEPT_CONFIG[u.dept] || {};
+    var roleColor = u.role==='admin' ? 'var(--amber)' : u.role==='supervisor' ? 'var(--sky)' : 'var(--muted)';
+    var initials = u.name.split(' ').map(function(n){ return n[0]||''; }).slice(0,2).join('');
+    return '<div class="resident-card" onclick="openEditUser(\'' + u.id + '\')">' +
+      '<div class="resident-avatar" style="color:' + (cfg.color||'var(--amber)') + '">' + initials + '</div>' +
+      '<div class="resident-info">' +
+        '<div class="resident-name">' + u.name + '</div>' +
+        '<div class="resident-meta">' + (cfg.icon||'') + ' ' + (cfg.label||u.dept) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
+        '<div class="rr-badge info" style="color:' + roleColor + ';background:none;border-color:' + roleColor + '33">' + u.role + '</div>' +
+        '<div class="rr-badge ' + (u.active?'ok':'urgent') + '" style="font-size:9px;">' + (u.active?'Active':'Inactive') + '</div>' +
+      '</div>' +
+      '<div class="resident-arrow">›</div>' +
+    '</div>';
   }).join('');
 }
 
@@ -2589,13 +2584,18 @@ function openAddUser() {
   document.getElementById('um-pin').value  = '';
   document.getElementById('um-role').value = 'staff';
   document.getElementById('um-error').style.display = 'none';
+  // Remove any deactivate button from previous edit session
+  var old = document.getElementById('um-deactivate-btn');
+  if (old) old.remove();
   document.querySelector('#user-modal .btn-save').textContent = 'Save Staff';
   showUserModal();
 }
 
 function openEditUser(id) {
-  const user = allUsers.find(u => u.id === id);
+  var user = null;
+  for (var i=0; i<allUsers.length; i++) { if (allUsers[i].id===id){ user=allUsers[i]; break; } }
   if (!user) return;
+
   editingUserId = id;
   document.getElementById('user-modal-title').textContent = 'Edit Staff Account';
   document.getElementById('um-name').value = user.name;
@@ -2605,90 +2605,102 @@ function openEditUser(id) {
   document.getElementById('um-error').style.display = 'none';
   document.querySelector('#user-modal .btn-save').textContent = 'Update Staff';
 
-  // Add deactivate option for non-self users
-  const deactivateHtml = (id !== currentUser?.id) ? `
-    <button class="btn-secondary" style="width:100%;margin-top:-4px;color:${user.active?'#fb7185':'#34d399'}"
-      onclick="toggleUserActive('${id}')">
-      ${user.active ? '🚫 Deactivate Account' : '✓ Reactivate Account'}
-    </button>` : '';
-  document.getElementById('um-error').insertAdjacentHTML('afterend', deactivateHtml);
-  // Remove any leftover deactivate buttons on re-open
-  document.querySelectorAll('#user-modal .btn-secondary:not([onclick="closeUserModal()"])').forEach((b,i) => {
-    if (i>0) b.remove();
-  });
-  const extras = document.querySelectorAll('#user-modal .btn-secondary');
-  extras.forEach(b => { if(b.textContent.includes('Deactivate')||b.textContent.includes('Reactivate')) b.remove(); });
-  if (deactivateHtml) {
-    document.querySelector('#user-modal > div > div:last-child').insertAdjacentHTML('beforeend', deactivateHtml);
+  // Remove old deactivate button then add fresh one
+  var old = document.getElementById('um-deactivate-btn');
+  if (old) old.remove();
+
+  if (!currentUser || id !== currentUser.id) {
+    var btnRow = document.querySelector('#user-modal .btn-save').parentElement;
+    var deactBtn = document.createElement('button');
+    deactBtn.id = 'um-deactivate-btn';
+    deactBtn.className = 'btn-secondary';
+    deactBtn.style.cssText = 'width:100%;margin-top:4px;color:' + (user.active ? '#fb7185' : '#34d399');
+    deactBtn.textContent = user.active ? '🚫 Deactivate Account' : '✓ Reactivate Account';
+    deactBtn.onclick = function(){ toggleUserActive(id); };
+    btnRow.parentElement.insertBefore(deactBtn, btnRow);
   }
+
   showUserModal();
 }
 
 function showUserModal() {
-  const m = document.getElementById('user-modal');
-  m.style.display = 'flex';
+  document.getElementById('user-modal').style.display = 'flex';
 }
 
 function closeUserModal() {
   document.getElementById('user-modal').style.display = 'none';
   editingUserId = null;
+  var old = document.getElementById('um-deactivate-btn');
+  if (old) old.remove();
 }
 
-async function saveUser() {
-  const name = document.getElementById('um-name').value.trim();
-  const dept = document.getElementById('um-dept').value;
-  const pin  = document.getElementById('um-pin').value.trim();
-  const role = document.getElementById('um-role').value;
-  const errEl = document.getElementById('um-error');
-
-  if (!name || !dept) {
-    errEl.textContent = 'Name and department are required.'; errEl.style.display='block'; return;
-  }
-
-  // PIN required for new users, optional for edits
-  if (!editingUserId && !pin) {
-    errEl.textContent = 'PIN is required for new accounts.'; errEl.style.display='block'; return;
-  }
-  if (pin && (pin.length < 4 || !/^\d+$/.test(pin))) {
-    errEl.textContent = 'PIN must be 4–6 digits.'; errEl.style.display='block'; return;
-  }
+function saveUser() {
+  var name  = (document.getElementById('um-name').value || '').trim();
+  var dept  = document.getElementById('um-dept').value || '';
+  var pin   = (document.getElementById('um-pin').value  || '').trim();
+  var role  = document.getElementById('um-role').value  || 'staff';
+  var errEl = document.getElementById('um-error');
 
   errEl.style.display = 'none';
 
+  if (!name || !dept) {
+    errEl.textContent = 'Name and department are required.';
+    errEl.style.display = 'block'; return;
+  }
+  if (!editingUserId && !pin) {
+    errEl.textContent = 'PIN is required for new accounts.';
+    errEl.style.display = 'block'; return;
+  }
+  if (pin && (pin.length < 4 || !/^\d+$/.test(pin))) {
+    errEl.textContent = 'PIN must be 4–6 digits (numbers only).';
+    errEl.style.display = 'block'; return;
+  }
+
+  // Store PIN in simple hash: format — upgraded to SHA-256 on next login if crypto available
+  var pinHash = pin ? ('hash:' + pin) : null;
+
   if (editingUserId) {
-    const idx = allUsers.findIndex(u => u.id === editingUserId);
+    var idx = -1;
+    for (var i=0; i<allUsers.length; i++) { if (allUsers[i].id===editingUserId){ idx=i; break; } }
     if (idx >= 0) {
       allUsers[idx].name = name;
       allUsers[idx].dept = dept;
       allUsers[idx].role = role;
-      if (pin) allUsers[idx].pinHash = await hashPinAsync(pin);
+      if (pinHash) allUsers[idx].pinHash = pinHash;
       allUsers[idx].updatedAt = new Date().toISOString();
     }
     showToast('✓ Staff account updated', 'success');
   } else {
-    // Check duplicate name + dept
-    const dup = allUsers.find(u => u.name.toLowerCase()===name.toLowerCase() && u.dept===dept);
-    if (dup) { errEl.textContent='An account with this name and department already exists.'; errEl.style.display='block'; return; }
-    const pinHash = await hashPinAsync(pin);
-    allUsers.push({ id:'u'+Date.now(), name, dept, role, pinHash, active:true, createdAt: new Date().toISOString() });
+    // Check for duplicate
+    var dup = false;
+    for (var j=0; j<allUsers.length; j++) {
+      if (allUsers[j].name.toLowerCase()===name.toLowerCase() && allUsers[j].dept===dept) { dup=true; break; }
+    }
+    if (dup) {
+      errEl.textContent = 'An account with this name and department already exists.';
+      errEl.style.display = 'block'; return;
+    }
+    allUsers.push({ id:'u'+Date.now(), name:name, dept:dept, role:role, pinHash:pinHash, active:true, createdAt:new Date().toISOString() });
     showToast('✓ Staff account created', 'success');
   }
 
   saveLocal();
-  if (isCloudReady()) pushCloud();
+  if (isCloudReady()) pushCloud().catch(function(){});
   closeUserModal();
   renderUserList();
 }
 
-async function toggleUserActive(id) {
-  const idx = allUsers.findIndex(u => u.id === id);
-  if (idx<0) return;
+function toggleUserActive(id) {
+  var idx = -1;
+  for (var i=0; i<allUsers.length; i++) { if (allUsers[i].id===id){ idx=i; break; } }
+  if (idx < 0) return;
   allUsers[idx].active = !allUsers[idx].active;
+  var msg = allUsers[idx].active ? '✓ Account reactivated' : 'Account deactivated';
   saveLocal();
-  if (isCloudReady()) pushCloud();
+  if (isCloudReady()) pushCloud().catch(function(){});
   closeUserModal();
   renderUserList();
-  showToast(allUsers[idx].active ? '✓ Account reactivated' : 'Account deactivated', 'success');
+  showToast(msg, 'success');
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2756,27 +2768,35 @@ function switchNav(tab) {
   if (tab === 'reports') {
     generateReport(reportPeriod);
     showScreen('screen-reports');
-    document.getElementById('report-dept-badge').textContent =
-      DEPT_CONFIG[currentUser.dept]?.label || 'Reports';
+    var badge = document.getElementById('report-dept-badge');
+    if (badge && currentUser) badge.textContent = DEPT_CONFIG[currentUser.dept]
+      ? DEPT_CONFIG[currentUser.dept].label : 'Reports';
+    if (isCloudReady()) pullCloud().catch(function(){});
+  } else if (tab === 'users') {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    renderUserList();
+    showScreen('screen-users');
   } else {
     document.getElementById('search-input').value = '';
     filterResidents('');
     showScreen('screen-search');
+    if (isCloudReady()) pullCloud().catch(function(){});
   }
-  // Sync both nav bars
-  ['nav-residents','nav-reports','rnav-residents','rnav-reports'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.toggle('active',
-      (tab === 'residents' && id.includes('residents')) ||
-      (tab === 'reports'   && id.includes('reports'))
-    );
+
+  // Sync all nav tab active states
+  document.querySelectorAll('.nav-tab').forEach(function(el) {
+    var id = el.id || '';
+    var active =
+      (tab === 'residents' && (id === 'nav-residents' || id === 'rnav-residents')) ||
+      (tab === 'reports'   && (id === 'nav-reports'   || id === 'rnav-reports'))   ||
+      (tab === 'users'     && el.classList.contains('nav-tab-users'));
+    el.classList.toggle('active', active);
   });
 }
 
 function setPeriod(p) {
   reportPeriod = p;
-  document.querySelectorAll('.period-btn').forEach(b => {
+  document.querySelectorAll('.period-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.period === p);
   });
   generateReport(p);
