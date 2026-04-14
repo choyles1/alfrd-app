@@ -1099,6 +1099,7 @@ html, body { height: auto !important; overflow: auto !important; }
       <strong id="header-user-name">Staff</strong>
       <span id="header-user-role">Department</span>
     </div>
+    <button class="btn-icon admin-only" id="btn-add-resident" onclick="openAddResident()" title="Add resident" style="display:none;font-size:20px;color:var(--amber)">+</button>
     <button class="btn-icon" onclick="doLogout()" title="Sign out">⎋</button>
   </div>
 
@@ -1181,6 +1182,7 @@ html, body { height: auto !important; overflow: auto !important; }
     <button class="btn-icon" onclick="goBack()" title="Back">←</button>
     <div class="header-logo">ALF<span>R</span>D</div>
     <div class="header-spacer"></div>
+    <button class="btn-icon admin-only" id="btn-edit-resident" onclick="openEditResident(currentResident && currentResident.id)" title="Edit resident" style="display:none;">✎</button>
     <div class="header-user">
       <strong id="form-user-name">Staff</strong>
       <span id="form-user-role">Department</span>
@@ -1808,6 +1810,7 @@ html, body { height: auto !important; overflow: auto !important; }
 
   <div class="save-bar">
     <button class="btn-secondary" onclick="goBack()">← Back</button>
+    <button class="btn-secondary admin-only" id="btn-move-out" onclick="confirmMoveOut()" style="display:none;color:#fb7185;border-color:rgba(251,113,133,0.3)">Move Out</button>
     <button class="btn-save" id="btn-save" onclick="saveClick()">Save Record</button>
   </div>
 
@@ -1816,6 +1819,78 @@ html, body { height: auto !important; overflow: auto !important; }
 <!-- Toast -->
 
 <div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     RESIDENT MODAL (Add / Edit)
+═══════════════════════════════════════════ -->
+
+<div id="resident-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;border-top:1px solid var(--border2);box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:20px;color:#fff;" id="res-modal-title">Add Resident</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="form-row">
+        <div class="field-group" style="flex:1;">
+          <div class="field-label">First Name</div>
+          <input class="field-input" id="rm-first" type="text" placeholder="First" autocomplete="off">
+        </div>
+        <div class="field-group" style="flex:1;">
+          <div class="field-label">Last Name</div>
+          <input class="field-input" id="rm-last" type="text" placeholder="Last" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field-group" style="flex:1;">
+          <div class="field-label">Room</div>
+          <input class="field-input" id="rm-room" type="text" placeholder="101A" autocomplete="off">
+        </div>
+        <div class="field-group" style="flex:1;">
+          <div class="field-label">Date of Birth</div>
+          <input class="field-input" id="rm-dob" type="date">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Care Level</div>
+        <select class="field-input" id="rm-care">
+          <option>Independent</option>
+          <option>Assisted Living</option>
+          <option>Memory Care</option>
+          <option>Skilled Nursing</option>
+          <option>Respite</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Physician</div>
+        <input class="field-input" id="rm-physician" type="text" placeholder="Dr. Smith" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Primary Contact</div>
+        <input class="field-input" id="rm-contact" type="text" placeholder="Name — Relationship — Phone" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Notes</div>
+        <textarea class="field-input" id="rm-notes" placeholder="General notes…" style="min-height:72px;resize:none;line-height:1.5;"></textarea>
+      </div>
+      <div id="rm-error" style="color:#fb7185;font-size:13px;display:none;"></div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn-secondary" style="flex:1" onclick="closeResidentModal()">Cancel</button>
+        <button class="btn-save" style="flex:2" id="rm-save-btn" onclick="saveResident()">Add Resident</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Move Out -->
+
+<div id="moveout-modal" style="display:none;position:fixed;inset:0;z-index:101;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:360px;box-shadow:var(--shadow-lg);">
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;">Confirm Move Out</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;" id="moveout-msg">This will mark the resident as discharged. Their record will be kept but they will no longer appear in the active census.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-secondary" style="flex:1" onclick="closeMoveOutModal()">Cancel</button>
+      <button class="btn-save" style="flex:1;background:#fb7185;color:#fff;" onclick="executeMoveOut()">Move Out</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      SCREEN 5: USER MANAGEMENT (admin only)
@@ -2362,11 +2437,18 @@ function finishLogin(match) {
   updateHeaders();
   renderSyncBars();
 
-  // Show Users tab for admins only
+  // Show/hide admin-only controls
   var isAdmin = match.role === 'admin';
+  var adminEls = document.querySelectorAll('.admin-only');
+  adminEls.forEach(function(el) {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+
+  // Show Users tab for admins only
+  var isAdminForNav = match.role === 'admin';
   ['nav-users', 'rnav-users'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.classList.toggle('visible', isAdmin);
+    if (el) el.classList.toggle('visible', isAdminForNav);
   });
 
   if (isCloudReady()) {
@@ -2436,6 +2518,7 @@ function goBack() {
 function renderResidentList(list) {
   var container = document.getElementById('resident-list');
   if (!container) return;
+  var isAdmin = currentUser && currentUser.role === 'admin';
   var sorted = (list || []).slice().sort(function(a,b){ return (a.last||'').localeCompare(b.last||''); });
   if (!sorted.length) {
     container.innerHTML = '<div class="empty-state"><div class="es-icon">🏠</div><div class="es-text">No residents yet</div></div>';
@@ -2446,6 +2529,9 @@ function renderResidentList(list) {
     var alertDots = (r.alerts||[]).map(function(a) {
       return '<div class="alert-dot ' + (a.type==='warn'?'warn':'') + '"></div>';
     }).join('');
+    var editBtn = isAdmin
+      ? '<button class="btn-icon" onclick="event.stopPropagation();openEditResident(\'' + r.id + '\')" style="font-size:14px;width:32px;height:32px;flex-shrink:0;" title="Edit">✎</button>'
+      : '';
     return '<div class="resident-card" onclick="openResident(\'' + r.id + '\')">' +
       '<div class="resident-avatar">' + initials + '</div>' +
       '<div class="resident-info">' +
@@ -2453,6 +2539,7 @@ function renderResidentList(list) {
         '<div class="resident-meta">Room ' + (r.room||'—') + ' · ' + (r.care||'') + '</div>' +
       '</div>' +
       '<div class="resident-alerts">' + alertDots + '</div>' +
+      editBtn +
       '<div class="resident-arrow">›</div>' +
     '</div>';
   }).join('');
@@ -3054,6 +3141,148 @@ function showToast(msg, type) {
 
 function fmtTime() {
   return new Date().toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESIDENT ADD / EDIT / MOVE-OUT
+═══════════════════════════════════════════════════════ */
+var editingResidentId = null;
+
+function openAddResident() {
+  editingResidentId = null;
+  document.getElementById('res-modal-title').textContent = 'Add Resident';
+  document.getElementById('rm-save-btn').textContent = 'Add Resident';
+  document.getElementById('rm-first').value    = '';
+  document.getElementById('rm-last').value     = '';
+  document.getElementById('rm-room').value     = '';
+  document.getElementById('rm-dob').value      = '';
+  document.getElementById('rm-care').value     = 'Assisted Living';
+  document.getElementById('rm-physician').value = '';
+  document.getElementById('rm-contact').value  = '';
+  document.getElementById('rm-notes').value    = '';
+  document.getElementById('rm-error').style.display = 'none';
+  document.getElementById('resident-modal').style.display = 'flex';
+}
+
+function openEditResident(id) {
+  var res = null;
+  for (var i=0; i<allResidents.length; i++) {
+    if (allResidents[i].id === id) { res = allResidents[i]; break; }
+  }
+  if (!res) return;
+  editingResidentId = id;
+  document.getElementById('res-modal-title').textContent = 'Edit Resident';
+  document.getElementById('rm-save-btn').textContent = 'Save Changes';
+  document.getElementById('rm-first').value     = res.first     || '';
+  document.getElementById('rm-last').value      = res.last      || '';
+  document.getElementById('rm-room').value      = res.room      || '';
+  document.getElementById('rm-dob').value       = res.dob       || '';
+  document.getElementById('rm-care').value      = res.care      || 'Assisted Living';
+  document.getElementById('rm-physician').value = res.physician || '';
+  document.getElementById('rm-contact').value   = res.primaryContact || '';
+  document.getElementById('rm-notes').value     = res.notes     || '';
+  document.getElementById('rm-error').style.display = 'none';
+  document.getElementById('resident-modal').style.display = 'flex';
+}
+
+function closeResidentModal() {
+  document.getElementById('resident-modal').style.display = 'none';
+  editingResidentId = null;
+}
+
+function saveResident() {
+  var first  = (document.getElementById('rm-first').value || '').trim();
+  var last   = (document.getElementById('rm-last').value  || '').trim();
+  var room   = (document.getElementById('rm-room').value  || '').trim();
+  var dob    = document.getElementById('rm-dob').value    || '';
+  var care   = document.getElementById('rm-care').value   || 'Assisted Living';
+  var phys   = (document.getElementById('rm-physician').value || '').trim();
+  var contact= (document.getElementById('rm-contact').value   || '').trim();
+  var notes  = (document.getElementById('rm-notes').value     || '').trim();
+  var errEl  = document.getElementById('rm-error');
+
+  errEl.style.display = 'none';
+  if (!first || !last) {
+    errEl.textContent = 'First and last name are required.';
+    errEl.style.display = 'block'; return;
+  }
+  if (!room) {
+    errEl.textContent = 'Room number is required.';
+    errEl.style.display = 'block'; return;
+  }
+
+  if (editingResidentId) {
+    // Edit existing
+    var idx = -1;
+    for (var i=0; i<allResidents.length; i++) {
+      if (allResidents[i].id === editingResidentId) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      allResidents[idx].first          = first;
+      allResidents[idx].last           = last;
+      allResidents[idx].room           = room;
+      allResidents[idx].dob            = dob;
+      allResidents[idx].care           = care;
+      allResidents[idx].physician      = phys;
+      allResidents[idx].primaryContact = contact;
+      allResidents[idx].notes          = notes;
+      allResidents[idx].updatedAt      = new Date().toISOString();
+    }
+    showToast('✓ Resident updated', 'success');
+  } else {
+    // Add new
+    var newRes = {
+      id:             'r' + Date.now(),
+      first:          first,
+      last:           last,
+      room:           room,
+      dob:            dob,
+      care:           care,
+      physician:      phys,
+      primaryContact: contact,
+      notes:          notes,
+      alerts:         [],
+      deptData:       {},
+      createdAt:      new Date().toISOString(),
+    };
+    allResidents.push(newRes);
+    showToast('✓ Resident added', 'success');
+  }
+
+  saveLocal();
+  if (isCloudReady()) pushCloud().catch(function(){});
+  closeResidentModal();
+  renderResidentList(allResidents);
+}
+
+function confirmMoveOut() {
+  if (!currentResident) return;
+  var name = (currentResident.first || '') + ' ' + (currentResident.last || '');
+  document.getElementById('moveout-msg').textContent =
+    'This will mark ' + name + ' as discharged. Their record is kept but they will no longer appear in the active census.';
+  document.getElementById('moveout-modal').style.display = 'flex';
+}
+
+function closeMoveOutModal() {
+  document.getElementById('moveout-modal').style.display = 'none';
+}
+
+function executeMoveOut() {
+  if (!currentResident) return;
+  var idx = -1;
+  for (var i=0; i<allResidents.length; i++) {
+    if (allResidents[i].id === currentResident.id) { idx=i; break; }
+  }
+  if (idx >= 0) {
+    allResidents[idx].care        = 'Discharged';
+    allResidents[idx].movedOutAt  = new Date().toISOString();
+    allResidents[idx].movedOutBy  = currentUser ? currentUser.name : '';
+  }
+  saveLocal();
+  if (isCloudReady()) pushCloud().catch(function(){});
+  closeMoveOutModal();
+  showToast('Resident moved out', '');
+  goBack();
 }
 
 /* ═══════════════════════════════════════════════════════
