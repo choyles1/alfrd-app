@@ -2063,14 +2063,15 @@ let cloudConfig = {
    CLOUD SYNC — JSONBin
 ═══════════════════════════════════════════════════════ */
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
-const isCloudReady = () => cloudConfig.apiKey && cloudConfig.residentsBin && cloudConfig.usersBin;
+const isCloudReady = function() {
+  return cloudConfig.apiKey && cloudConfig.residentsBin && cloudConfig.usersBin;
+};
 
 function setSyncStatus(state, msg) {
-  // state: 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
-  document.querySelectorAll('.sync-dot').forEach(d => {
+  document.querySelectorAll('.sync-dot').forEach(function(d) {
     d.className = 'sync-dot ' + (state === 'idle' ? '' : state);
   });
-  document.querySelectorAll('.sync-label').forEach(l => {
+  document.querySelectorAll('.sync-label').forEach(function(l) {
     l.textContent = msg || '';
   });
 }
@@ -2189,53 +2190,50 @@ function closeSetup() { document.getElementById('setup-modal').classList.remove(
 
 function startSyncInterval() {
   if (syncInterval) clearInterval(syncInterval);
-  // Pull every 90 seconds when app is in foreground
-  syncInterval = setInterval(() => {
-    if (currentUser) pullCloud();
+  syncInterval = setInterval(function() {
+    if (currentUser) pullCloud().catch(function(){});
   }, 90000);
-  // Also pull on tab focus
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && currentUser) pullCloud();
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && currentUser) pullCloud().catch(function(){});
   });
 }
 
 /* ─── Local Fallback ─── */
 function saveLocal() {
-  localStorage.setItem('alfrd_residents', JSON.stringify(allResidents));
-  localStorage.setItem('alfrd_users',     JSON.stringify(allUsers));
+  try {
+    localStorage.setItem('alfrd_residents', JSON.stringify(allResidents));
+    localStorage.setItem('alfrd_users',     JSON.stringify(allUsers));
+  } catch(e) { console.warn('saveLocal failed:', e); }
 }
 
 function loadLocal() {
-  const r = localStorage.getItem('alfrd_residents');
-  const u = localStorage.getItem('alfrd_users');
-  if (r) allResidents = JSON.parse(r);
-  else   allResidents = [...SEED_RESIDENTS];
-  if (u) allUsers     = JSON.parse(u);
-  else   allUsers     = [...SEED_USERS];
+  try {
+    var r = localStorage.getItem('alfrd_residents');
+    var u = localStorage.getItem('alfrd_users');
+    allResidents = r ? JSON.parse(r) : JSON.parse(JSON.stringify(SEED_RESIDENTS));
+    allUsers     = u ? JSON.parse(u) : JSON.parse(JSON.stringify(SEED_USERS));
+  } catch(e) {
+    allResidents = JSON.parse(JSON.stringify(SEED_RESIDENTS));
+    allUsers     = JSON.parse(JSON.stringify(SEED_USERS));
+  }
 }
 
-/* ─── Sync status bars rendered into headers ─── */
+/* ─── Sync status bars ─── */
 function renderSyncBars() {
-  const barHtml = `
-    <div class="sync-bar">
-      <div class="sync-dot ${isCloudReady()?'ok':''}"></div>
-      <span class="sync-label">${isCloudReady()?'Ready':'Offline — '}
-        ${isCloudReady()?'':''}</span>
-      ${!isCloudReady()
-        ? `<span class="sync-setup-link" onclick="openSetup()">Connect Cloud Sync</span>`
-        : ''}
-      <div class="sync-spacer"></div>
-      ${isCloudReady()
-        ? `<span class="sync-label" style="font-size:10px;"></span>`
-        : ''}
-    </div>`;
+  var ready = isCloudReady();
+  var barHtml = '<div class="sync-bar">' +
+    '<div class="sync-dot ' + (ready ? 'ok' : '') + '"></div>' +
+    '<span class="sync-label">' + (ready ? 'Synced' : 'Offline') + '</span>' +
+    (ready ? '' : '&nbsp;<span class="sync-setup-link" onclick="openSetup()">Connect Cloud Sync</span>') +
+    '<div class="sync-spacer"></div>' +
+  '</div>';
 
-  ['screen-search','screen-reports','screen-users'].forEach(sid => {
-    const s = document.getElementById(sid);
+  ['screen-search','screen-reports','screen-users'].forEach(function(sid) {
+    var s = document.getElementById(sid);
     if (!s) return;
-    const existing = s.querySelector('.sync-bar');
+    var existing = s.querySelector('.sync-bar');
     if (existing) existing.remove();
-    const header = s.querySelector('.app-header');
+    var header = s.querySelector('.app-header');
     if (header) header.insertAdjacentHTML('afterend', barHtml);
   });
 }
@@ -2372,20 +2370,15 @@ function doLogout() {
 
 function updateHeaders() {
   if (!currentUser) return;
-  const { name, dept } = currentUser;
-  const label = DEPT_CONFIG[dept]?.label || dept;
-  ['header-dept-badge','report-dept-badge'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = label;
-  });
-  ['header-user-name','form-user-name'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = name;
-  });
-  ['header-user-role','form-user-role'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = label;
-  });
+  var name  = currentUser.name;
+  var dept  = currentUser.dept;
+  var label = (DEPT_CONFIG[dept] && DEPT_CONFIG[dept].label) || dept;
+  var ids1 = ['header-dept-badge','report-dept-badge'];
+  var ids2 = ['header-user-name','form-user-name'];
+  var ids3 = ['header-user-role','form-user-role'];
+  ids1.forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=label; });
+  ids2.forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=name; });
+  ids3.forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=label; });
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2402,7 +2395,7 @@ function applyDeptTheme(dept) {
    SCREEN NAV
 ═══════════════════════════════════════════════════════ */
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
 }
 
@@ -2416,36 +2409,36 @@ function goBack() {
    RESIDENT LIST
 ═══════════════════════════════════════════════════════ */
 function renderResidentList(list) {
-  const container = document.getElementById('resident-list');
-  const sorted = [...list].sort((a,b) => a.last.localeCompare(b.last));
+  var container = document.getElementById('resident-list');
+  if (!container) return;
+  var sorted = (list || []).slice().sort(function(a,b){ return (a.last||'').localeCompare(b.last||''); });
   if (!sorted.length) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">🏠</div><div class="es-text">No residents yet</div></div>`;
+    container.innerHTML = '<div class="empty-state"><div class="es-icon">🏠</div><div class="es-text">No residents yet</div></div>';
     return;
   }
-  container.innerHTML = sorted.map(r => {
-    const initials   = (r.first[0]||'') + (r.last[0]||'');
-    const alertDots  = (r.alerts||[]).map(a =>
-      `<div class="alert-dot ${a.type==='warn'?'warn':''}"></div>`
-    ).join('');
-    return `
-      <div class="resident-card" onclick="openResident('${r.id}')">
-        <div class="resident-avatar">${initials}</div>
-        <div class="resident-info">
-          <div class="resident-name">${r.last}, ${r.first}</div>
-          <div class="resident-meta">Room ${r.room} · ${r.care}</div>
-        </div>
-        <div class="resident-alerts">${alertDots}</div>
-        <div class="resident-arrow">›</div>
-      </div>`;
+  container.innerHTML = sorted.map(function(r) {
+    var initials = ((r.first||'')[0]||'') + ((r.last||'')[0]||'');
+    var alertDots = (r.alerts||[]).map(function(a) {
+      return '<div class="alert-dot ' + (a.type==='warn'?'warn':'') + '"></div>';
+    }).join('');
+    return '<div class="resident-card" onclick="openResident(\'' + r.id + '\')">' +
+      '<div class="resident-avatar">' + initials + '</div>' +
+      '<div class="resident-info">' +
+        '<div class="resident-name">' + (r.last||'') + ', ' + (r.first||'') + '</div>' +
+        '<div class="resident-meta">Room ' + (r.room||'—') + ' · ' + (r.care||'') + '</div>' +
+      '</div>' +
+      '<div class="resident-alerts">' + alertDots + '</div>' +
+      '<div class="resident-arrow">›</div>' +
+    '</div>';
   }).join('');
 }
 
 function filterResidents(q) {
-  const lower = q.toLowerCase();
-  const filtered = allResidents.filter(r =>
-    `${r.first} ${r.last}`.toLowerCase().includes(lower) ||
-    (r.room||'').toLowerCase().includes(lower)
-  );
+  var lower = (q||'').toLowerCase();
+  var filtered = allResidents.filter(function(r) {
+    return ((r.first||'') + ' ' + (r.last||'')).toLowerCase().includes(lower) ||
+           (r.room||'').toLowerCase().includes(lower);
+  });
   renderResidentList(filtered);
 }
 
@@ -2453,29 +2446,32 @@ function filterResidents(q) {
    OPEN RESIDENT
 ═══════════════════════════════════════════════════════ */
 function openResident(id) {
-  currentResident = allResidents.find(r => r.id === id);
-  if (!currentResident) return;
-  const r = currentResident;
+  var found = null;
+  for (var i=0; i<allResidents.length; i++) {
+    if (allResidents[i].id === id) { found = allResidents[i]; break; }
+  }
+  if (!found) return;
+  currentResident = found;
+  var r = currentResident;
 
-  document.getElementById('banner-avatar').textContent = (r.first[0]||'') + (r.last[0]||'');
-  document.getElementById('banner-name').textContent   = `${r.first} ${r.last}`;
-  document.getElementById('banner-meta').textContent   = `Room ${r.room} · ${r.care} · DOB ${formatDate(r.dob)}`;
+  document.getElementById('banner-avatar').textContent = ((r.first||'')[0]||'') + ((r.last||'')[0]||'');
+  document.getElementById('banner-name').textContent   = (r.first||'') + ' ' + (r.last||'');
+  document.getElementById('banner-meta').textContent   = 'Room ' + (r.room||'—') + ' · ' + (r.care||'') + ' · DOB ' + formatDate(r.dob);
 
-  const alertsEl = document.getElementById('banner-alerts');
-  alertsEl.innerHTML = (r.alerts||[]).map(a =>
-    `<div class="banner-alert-chip ${a.type==='warn'?'warn':''}">${a.text}</div>`
-  ).join('');
+  var alertsEl = document.getElementById('banner-alerts');
+  alertsEl.innerHTML = (r.alerts||[]).map(function(a) {
+    return '<div class="banner-alert-chip ' + (a.type==='warn'?'warn':'') + '">' + (a.text||'') + '</div>';
+  }).join('');
 
-  const urgents = (r.alerts||[]).filter(a => a.type === 'urgent');
-  const strip   = document.getElementById('alert-strip');
+  var urgents = (r.alerts||[]).filter(function(a){ return a.type==='urgent'; });
+  var strip   = document.getElementById('alert-strip');
   if (urgents.length) {
-    document.getElementById('alert-strip-text').textContent = urgents.map(a=>a.text).join(' · ');
+    document.getElementById('alert-strip-text').textContent = urgents.map(function(a){ return a.text; }).join(' · ');
     strip.classList.remove('hidden');
   } else {
     strip.classList.add('hidden');
   }
 
-  // Populate core fields
   document.getElementById('core-first').value     = r.first     || '';
   document.getElementById('core-last').value      = r.last      || '';
   document.getElementById('core-room').value      = r.room      || '';
@@ -2490,42 +2486,43 @@ function openResident(id) {
 
 function formatDate(d) {
   if (!d) return '';
-  const [y,m,day] = d.split('-');
-  return `${m}/${day}/${y}`;
+  var parts = d.split('-');
+  if (parts.length < 3) return d;
+  return parts[1] + '/' + parts[2] + '/' + parts[0];
 }
 
 /* ═══════════════════════════════════════════════════════
    DEPT TABS
 ═══════════════════════════════════════════════════════ */
 function buildDeptTabs() {
-  const dept = currentUser.dept;
-  const tabs = ROLE_TABS[dept] || ['core'];
-  const wrap = document.getElementById('dept-tabs');
-  wrap.innerHTML = tabs.map(t => {
-    const isCore = t === 'core';
-    const cfg = isCore ? { label:'Core', icon:'📋' } : DEPT_CONFIG[t];
-    return `
-      <div class="dept-tab" id="tab-btn-${t}" onclick="switchTab('${t}')"
-           style="${isCore?'':` --dept-active-color:${cfg.color}`}">
-        <div class="dept-tab-icon">${cfg.icon}</div>
-        <div class="dept-tab-label">${cfg.label}</div>
-      </div>`;
+  var dept = currentUser.dept;
+  var tabs = ROLE_TABS[dept] || ['core'];
+  var wrap = document.getElementById('dept-tabs');
+  wrap.innerHTML = tabs.map(function(t) {
+    var isCore = t === 'core';
+    var cfg = isCore ? { label:'Core', icon:'📋' } : DEPT_CONFIG[t];
+    var style = isCore ? '' : ' style="--dept-active-color:' + cfg.color + '"';
+    return '<div class="dept-tab" id="tab-btn-' + t + '" onclick="switchTab(\'' + t + '\')"' + style + '>' +
+      '<div class="dept-tab-icon">' + cfg.icon + '</div>' +
+      '<div class="dept-tab-label">' + cfg.label + '</div>' +
+    '</div>';
   }).join('');
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.dept-tab').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById(`tab-btn-${name}`);
+  document.querySelectorAll('.dept-tab').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.getElementById('tab-btn-' + name);
   if (btn) btn.classList.add('active');
 
-  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-  const panel = document.getElementById(`panel-${name}`);
+  document.querySelectorAll('.form-panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + name);
   if (panel) panel.classList.add('active');
 
   document.getElementById('form-body').scrollTop = 0;
 
-  const color = name==='core' ? 'var(--amber)' : (DEPT_CONFIG[name]?.color || 'var(--amber)');
-  const glow  = name==='core' ? 'var(--amber-glow)' : (DEPT_CONFIG[name]?.glow || 'var(--amber-glow)');
+  var cfg   = DEPT_CONFIG[name] || {};
+  var color = name==='core' ? 'var(--amber)' : (cfg.color || 'var(--amber)');
+  var glow  = name==='core' ? 'var(--amber-glow)' : (cfg.glow  || 'var(--amber-glow)');
   document.getElementById('resident-banner').style.setProperty('--dept-color', color);
   document.documentElement.style.setProperty('--dept-focus-color', color);
   document.documentElement.style.setProperty('--dept-focus-glow', glow);
@@ -2722,29 +2719,29 @@ function toggleUserActive(id) {
   showToast(msg, 'success');
 }
 
-/* ═══════════════════════════════════════════════════════
-   INTERACTIONS
-═══════════════════════════════════════════════════════ */
 function toggleSwitch(el) { el.classList.toggle('on'); }
 function toggleChip(el)   { el.classList.toggle('selected'); }
 
 function selectScale(groupId, el) {
-  document.querySelectorAll(`#${groupId} .scale-btn`).forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#' + groupId + ' .scale-btn').forEach(function(b) {
+    b.classList.remove('selected');
+  });
   el.classList.add('selected');
 }
 
 /* ═══════════════════════════════════════════════════════
    TOAST & UTILS
 ═══════════════════════════════════════════════════════ */
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
+function showToast(msg, type) {
+  type = type || '';
+  var t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show' + (type?' '+type:'');
-  setTimeout(() => { t.className = 'toast'; }, 2800);
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(function() { t.className = 'toast'; }, 2800);
 }
 
 function fmtTime() {
-  return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  return new Date().toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
 }
 
 /* ═══════════════════════════════════════════════════════
