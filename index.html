@@ -614,8 +614,8 @@ transition: border-color 0.2s, box-shadow 0.2s;
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
-border-color: var(–dept-focus-color, var(–amber));
-box-shadow: 0 0 0 3px var(–dept-focus-glow, var(–amber-glow));
+border-color: #f59e2a;
+box-shadow: 0 0 0 3px rgba(245,158,42,0.18);
 }
 .form-field textarea { resize: none; min-height: 80px; line-height: 1.5; }
 .form-field select option { background: var(–surface2); }
@@ -640,7 +640,7 @@ cursor: pointer;
 transition: background 0.2s;
 flex-shrink: 0;
 }
-.toggle.on { background: var(–dept-focus-color, var(–amber)); border-color: transparent; }
+.toggle.on { background: #f59e2a; border-color: transparent; }
 .toggle::after {
 content: ‘’;
 position: absolute;
@@ -659,7 +659,7 @@ box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 padding: 7px 14px;
 border-radius: 100px;
 background: var(–surface2);
-border: 1px solid var(–border2);
+border: 2px solid var(–border2);
 font-size: 13px;
 font-weight: 500;
 color: var(–muted);
@@ -670,10 +670,10 @@ user-select: none;
 -webkit-user-select: none;
 }
 .chip.selected {
-background: var(–dept-focus-color, var(–amber));
-border-color: var(–dept-focus-color, var(–amber));
+background: #f59e2a;
+border-color: #f59e2a;
 color: #0e1117;
-font-weight: 600;
+font-weight: 700;
 }
 
 /* Scale input */
@@ -684,10 +684,10 @@ gap: 6px;
 }
 .scale-btn {
 min-width: 40px;
-height: 40px;
+height: 44px;
 flex: 1;
 background: var(–surface2);
-border: 1px solid var(–border2);
+border: 2px solid var(–border2);
 border-radius: 8px;
 color: var(–muted);
 font-family: ‘Syne’, var(–font-display);
@@ -702,8 +702,8 @@ user-select: none;
 -webkit-user-select: none;
 }
 .scale-btn.selected {
-background: var(–dept-focus-color, var(–amber));
-border-color: var(–dept-focus-color, var(–amber));
+background: #f59e2a;
+border-color: #f59e2a;
 color: #0e1117;
 font-weight: 800;
 }
@@ -728,7 +728,7 @@ flex-shrink: 0;
 
 .btn-save {
 flex: 1;
-background: var(–dept-focus-color, var(–amber));
+background: #f59e2a;
 color: #0e1117;
 font-family: ‘Syne’, sans-serif;
 font-weight: 700;
@@ -817,8 +817,8 @@ text-transform: uppercase;
 color: var(–muted);
 transition: color 0.2s;
 }
-.nav-tab.active { border-top-color: var(–dept-focus-color, var(–amber)); }
-.nav-tab.active .nav-tab-label { color: var(–dept-focus-color, var(–amber)); }
+.nav-tab.active { border-top-color: #f59e2a; }
+.nav-tab.active .nav-tab-label { color: #f59e2a; }
 
 /* ═══════════════════════════════════════════════
 ██ SCREEN 4: REPORTS
@@ -856,7 +856,7 @@ cursor: pointer;
 transition: background 0.2s, color 0.2s;
 }
 .period-btn.active {
-background: var(–dept-focus-color, var(–amber));
+background: #f59e2a;
 color: #0e1117;
 }
 
@@ -874,7 +874,7 @@ content: ‘’;
 position: absolute;
 left: 0; top: 0; bottom: 0;
 width: 4px;
-background: var(–dept-focus-color, var(–amber));
+background: #f59e2a;
 }
 .report-header-card .rhc-inner { padding-left: 8px; }
 .report-dept {
@@ -909,7 +909,7 @@ text-align: center;
 font-family: ‘Syne’, sans-serif;
 font-size: 26px;
 font-weight: 800;
-color: var(–dept-focus-color, var(–amber));
+color: #f59e2a;
 line-height: 1;
 }
 .stat-card .stat-label {
@@ -963,7 +963,7 @@ display: flex; align-items: center; justify-content: center;
 font-family: ‘Syne’, sans-serif;
 font-size: 12px;
 font-weight: 700;
-color: var(–dept-focus-color, var(–amber));
+color: #f59e2a;
 flex-shrink: 0;
 margin-top: 1px;
 }
