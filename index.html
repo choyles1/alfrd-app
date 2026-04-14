@@ -1270,16 +1270,16 @@ html, body { height: auto !important; overflow: auto !important; }
     </div>
     <div class="form-section-body">
       <div class="form-row">
-        <div class="form-field"><label>BP Systolic</label><input type="number" placeholder="120" min="60" max="250"></div>
-        <div class="form-field"><label>BP Diastolic</label><input type="number" placeholder="80" min="40" max="150"></div>
+        <div class="form-field"><label>BP Systolic</label><input id="clin-bp-sys" type="number" placeholder="120" min="60" max="250"></div>
+        <div class="form-field"><label>BP Diastolic</label><input id="clin-bp-dia" type="number" placeholder="80" min="40" max="150"></div>
       </div>
       <div class="form-row">
-        <div class="form-field"><label>Pulse (bpm)</label><input type="number" placeholder="72" min="30" max="200"></div>
-        <div class="form-field"><label>Temp (°F)</label><input type="number" placeholder="98.6" step="0.1"></div>
+        <div class="form-field"><label>Pulse (bpm)</label><input id="clin-pulse" type="number" placeholder="72" min="30" max="200"></div>
+        <div class="form-field"><label>Temp (°F)</label><input id="clin-temp" type="number" placeholder="98.6" step="0.1"></div>
       </div>
       <div class="form-row">
-        <div class="form-field"><label>SpO2 (%)</label><input type="number" placeholder="98" min="70" max="100"></div>
-        <div class="form-field"><label>Weight (lbs)</label><input type="number" placeholder="145" step="0.1"></div>
+        <div class="form-field"><label>SpO2 (%)</label><input id="clin-spo2" type="number" placeholder="98" min="70" max="100"></div>
+        <div class="form-field"><label>Weight (lbs)</label><input id="clin-weight" type="number" placeholder="145" step="0.1"></div>
       </div>
       <div class="form-field">
         <label>Pain Level (0–10)</label>
@@ -1308,25 +1308,25 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Fall Risk Level</label>
-        <select>
+        <select id="clin-fall-risk">
           <option>Low</option><option>Moderate</option><option>High</option>
         </select>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">DNR on file</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="clin-dnr" onclick="toggleSwitch(this)"></div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Bed alarm active</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="clin-bed-alarm" onclick="toggleSwitch(this)"></div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Fall mat in use</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="clin-fall-mat" onclick="toggleSwitch(this)"></div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Wandering risk</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="clin-wandering" onclick="toggleSwitch(this)"></div>
       </div>
     </div>
   </div>
@@ -1337,18 +1337,18 @@ html, body { height: auto !important; overflow: auto !important; }
       <span class="form-section-title">Medication Flag</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Medication Name</label><input type="text" placeholder="e.g. Metformin 500mg"></div>
+      <div class="form-field"><label>Medication Name</label><input id="clin-med-name" type="text" placeholder="e.g. Metformin 500mg"></div>
       <div class="form-row">
         <div class="form-field">
           <label>Flag Type</label>
-          <select><option>Refused</option><option>Late</option><option>PRN Given</option><option>Held</option><option>Error</option></select>
+          <select id="clin-med-flag"><option>Refused</option><option>Late</option><option>PRN Given</option><option>Held</option><option>Error</option></select>
         </div>
         <div class="form-field">
           <label>Administered By</label>
-          <input type="text" placeholder="Staff initials">
+          <input id="clin-med-by" type="text" placeholder="Staff initials">
         </div>
       </div>
-      <div class="form-field"><label>Notes</label><textarea placeholder="Additional medication notes…"></textarea></div>
+      <div class="form-field"><label>Notes</label><textarea id="clin-med-notes" placeholder="Additional medication notes…"></textarea></div>
     </div>
   </div>
 
@@ -1358,18 +1358,18 @@ html, body { height: auto !important; overflow: auto !important; }
       <span class="form-section-title">Wound / Skin Assessment</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Location on Body</label><input type="text" placeholder="e.g. Left heel, coccyx…"></div>
+      <div class="form-field"><label>Location on Body</label><input id="clin-wound-loc" type="text" placeholder="e.g. Left heel, coccyx…"></div>
       <div class="form-row">
         <div class="form-field">
           <label>Stage / Type</label>
-          <select><option>Stage I</option><option>Stage II</option><option>Stage III</option><option>Stage IV</option><option>Unstageable</option><option>Skin Tear</option><option>Bruise</option></select>
+          <select id="clin-wound-stage"><option>Stage I</option><option>Stage II</option><option>Stage III</option><option>Stage IV</option><option>Unstageable</option><option>Skin Tear</option><option>Bruise</option></select>
         </div>
         <div class="form-field">
           <label>Healed?</label>
-          <select><option>No — Active</option><option>Improving</option><option>Yes — Healed</option></select>
+          <select id="clin-wound-healed"><option>No — Active</option><option>Improving</option><option>Yes — Healed</option></select>
         </div>
       </div>
-      <div class="form-field"><label>Treatment</label><textarea placeholder="Dressing type, frequency, ordered by…"></textarea></div>
+      <div class="form-field"><label>Treatment</label><textarea id="clin-wound-tx" placeholder="Dressing type, frequency, ordered by…"></textarea></div>
     </div>
   </div>
 
@@ -1382,18 +1382,18 @@ html, body { height: auto !important; overflow: auto !important; }
       <div class="form-row">
         <div class="form-field">
           <label>Incident Type</label>
-          <select><option>Fall</option><option>Near Miss</option><option>Elopement</option><option>Altercation</option><option>Choking</option><option>Skin Breakdown</option><option>Other</option></select>
+          <select id="clin-incident-type"><option>Fall</option><option>Near Miss</option><option>Elopement</option><option>Altercation</option><option>Choking</option><option>Skin Breakdown</option><option>Other</option></select>
         </div>
-        <div class="form-field"><label>Date/Time</label><input type="datetime-local"></div>
+        <div class="form-field"><label>Date/Time</label><input id="clin-incident-dt" type="datetime-local"></div>
       </div>
-      <div class="form-field"><label>Description</label><textarea placeholder="Describe what occurred…"></textarea></div>
+      <div class="form-field"><label>Description</label><textarea id="clin-incident-desc" placeholder="Describe what occurred…"></textarea></div>
       <div class="toggle-row">
         <span class="toggle-label">Family notified</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="clin-family-notified" onclick="toggleSwitch(this)"></div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Physician notified</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="clin-physician-notified" onclick="toggleSwitch(this)"></div>
       </div>
     </div>
   </div>
@@ -1404,7 +1404,7 @@ html, body { height: auto !important; overflow: auto !important; }
       <span class="form-section-title">Clinical Notes</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><textarea placeholder="General clinical observations for this shift…" style="min-height:100px"></textarea></div>
+      <div class="form-field"><textarea id="clin-notes" placeholder="General clinical observations for this shift…" style="min-height:100px"></textarea></div>
     </div>
   </div>
 </div>
@@ -1420,16 +1420,16 @@ html, body { height: auto !important; overflow: auto !important; }
       <div class="form-row">
         <div class="form-field">
           <label>Diet Type</label>
-          <select><option>Regular</option><option>Low Sodium</option><option>Diabetic</option><option>Heart Healthy</option><option>Renal</option><option>Pureed</option><option>Tube Feeding</option></select>
+          <select id="din-diet-type"><option>Regular</option><option>Low Sodium</option><option>Diabetic</option><option>Heart Healthy</option><option>Renal</option><option>Pureed</option><option>Tube Feeding</option></select>
         </div>
         <div class="form-field">
           <label>Texture</label>
-          <select><option>Regular</option><option>Soft</option><option>Minced & Moist</option><option>Pureed</option><option>Liquidized</option></select>
+          <select id="din-texture"><option>Regular</option><option>Soft</option><option>Minced & Moist</option><option>Pureed</option><option>Liquidized</option></select>
         </div>
       </div>
       <div class="form-field">
         <label>Fluid Restriction</label>
-        <select><option>None</option><option>1500 mL/day</option><option>1200 mL/day</option><option>1000 mL/day</option><option>Custom — see notes</option></select>
+        <select id="din-fluid"><option>None</option><option>1500 mL/day</option><option>1200 mL/day</option><option>1000 mL/day</option><option>Custom — see notes</option></select>
       </div>
       <div class="form-field">
         <label>Allergies (select all that apply)</label>
@@ -1444,16 +1444,16 @@ html, body { height: auto !important; overflow: auto !important; }
           <div class="chip" onclick="toggleChip(this)">Soy</div>
         </div>
       </div>
-      <div class="form-field"><label>Other Allergies / Intolerances</label><input type="text" placeholder="e.g. strawberries, MSG…"></div>
-      <div class="form-field"><label>Food Preferences</label><input type="text" placeholder="e.g. likes soup, prefers chicken…"></div>
-      <div class="form-field"><label>Dislikes</label><input type="text" placeholder="e.g. mushrooms, onions…"></div>
+      <div class="form-field"><label>Other Allergies / Intolerances</label><input id="din-other-allergy" type="text" placeholder="e.g. strawberries, MSG…"></div>
+      <div class="form-field"><label>Food Preferences</label><input id="din-prefs" type="text" placeholder="e.g. likes soup, prefers chicken…"></div>
+      <div class="form-field"><label>Dislikes</label><input id="din-dislikes" type="text" placeholder="e.g. mushrooms, onions…"></div>
       <div class="form-row">
-        <div class="form-field"><label>Dining Room</label><input type="text" placeholder="Main dining"></div>
-        <div class="form-field"><label>Seat Preference</label><input type="text" placeholder="Table 4, window seat…"></div>
+        <div class="form-field"><label>Dining Room</label><input id="din-room" type="text" placeholder="Main dining"></div>
+        <div class="form-field"><label>Seat Preference</label><input id="din-seat" type="text" placeholder="Table 4, window seat…"></div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Tray delivery to room</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="din-tray" onclick="toggleSwitch(this)"></div>
       </div>
     </div>
   </div>
@@ -1466,7 +1466,7 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Meal</label>
-        <select><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
+        <select id="din-meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
       </div>
       <div class="form-field">
         <label>Intake %</label>
@@ -1478,12 +1478,12 @@ html, body { height: auto !important; overflow: auto !important; }
           <div class="scale-btn" onclick="selectScale('intake-scale',this)">100%</div>
         </div>
       </div>
-      <div class="form-field"><label>Fluid Intake (oz)</label><input type="number" placeholder="8"></div>
+      <div class="form-field"><label>Fluid Intake (oz)</label><input id="din-fluid-oz" type="number" placeholder="8"></div>
       <div class="toggle-row">
         <span class="toggle-label">Meal refused</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="din-refused" onclick="toggleSwitch(this)"></div>
       </div>
-      <div class="form-field"><label>Notes</label><textarea placeholder="Appetite, behavior, observations…"></textarea></div>
+      <div class="form-field"><label>Notes</label><textarea id="din-notes" placeholder="Appetite, behavior, observations…"></textarea></div>
     </div>
   </div>
 </div>
@@ -1498,15 +1498,15 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Service Type</label>
-        <select><option>Daily Tidying</option><option>Full Clean</option><option>Linen Change</option><option>Bathroom Deep Clean</option><option>Carpet Clean</option><option>Move-in Clean</option><option>Move-out Clean</option></select>
+        <select id="hk-service-type"><option>Daily Tidying</option><option>Full Clean</option><option>Linen Change</option><option>Bathroom Deep Clean</option><option>Carpet Clean</option><option>Move-in Clean</option><option>Move-out Clean</option></select>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Service completed</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="hk-completed" onclick="toggleSwitch(this)"></div>
       </div>
-      <div class="form-field"><label>Do Not Enter Until</label><input type="datetime-local"></div>
-      <div class="form-field"><label>Maintenance Flag</label><input type="text" placeholder="Anything to flag for maintenance?"></div>
-      <div class="form-field"><label>Preference Notes</label><textarea placeholder="Resident preferences, sensitivities, special instructions…"></textarea></div>
+      <div class="form-field"><label>Do Not Enter Until</label><input id="hk-dne" type="datetime-local"></div>
+      <div class="form-field"><label>Maintenance Flag</label><input id="hk-maint-flag" type="text" placeholder="Anything to flag for maintenance?"></div>
+      <div class="form-field"><label>Preference Notes</label><textarea id="hk-notes" placeholder="Resident preferences, sensitivities, special instructions…"></textarea></div>
     </div>
   </div>
 </div>
@@ -1522,24 +1522,24 @@ html, body { height: auto !important; overflow: auto !important; }
       <div class="form-row">
         <div class="form-field">
           <label>Issue Type</label>
-          <select><option>Plumbing</option><option>Electrical</option><option>HVAC</option><option>Furniture</option><option>Door / Lock</option><option>Flooring</option><option>Appliance</option><option>Safety Equipment</option><option>Other</option></select>
+          <select id="maint-issue-type"><option>Plumbing</option><option>Electrical</option><option>HVAC</option><option>Furniture</option><option>Door / Lock</option><option>Flooring</option><option>Appliance</option><option>Safety Equipment</option><option>Other</option></select>
         </div>
         <div class="form-field">
           <label>Priority</label>
-          <select><option>Routine</option><option>Urgent</option><option>Emergency</option></select>
+          <select id="maint-priority"><option>Routine</option><option>Urgent</option><option>Emergency</option></select>
         </div>
       </div>
-      <div class="form-field"><label>Description</label><textarea placeholder="Describe the issue in detail…"></textarea></div>
+      <div class="form-field"><label>Description</label><textarea id="maint-desc" placeholder="Describe the issue in detail…"></textarea></div>
       <div class="toggle-row">
         <span class="toggle-label">Safety flag — requires immediate action</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="maint-safety" onclick="toggleSwitch(this)"></div>
       </div>
       <div class="form-field">
         <label>Status</label>
-        <select><option>Open</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select>
+        <select id="maint-status"><option>Open</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select>
       </div>
-      <div class="form-field"><label>Assigned To</label><input type="text" placeholder="Technician name"></div>
-      <div class="form-field"><label>Resolution Notes</label><textarea placeholder="What was done to resolve…"></textarea></div>
+      <div class="form-field"><label>Assigned To</label><input id="maint-assigned" type="text" placeholder="Technician name"></div>
+      <div class="form-field"><label>Resolution Notes</label><textarea id="maint-resolution" placeholder="What was done to resolve…"></textarea></div>
     </div>
   </div>
 </div>
@@ -1552,24 +1552,23 @@ html, body { height: auto !important; overflow: auto !important; }
       <span class="form-section-title">Resident Preferences</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Personal Interests</label><input type="text" placeholder="e.g. gardening, classical music, chess…"></div>
-      <div class="form-field"><label>Transportation Needs</label><textarea placeholder="Medical appointments, preferred times, mobility aids needed…"></textarea></div>
-      <div class="form-field"><label>Special Requests</label><textarea placeholder="Ongoing requests, preferences, accommodations…"></textarea></div>
+      <div class="form-field"><label>Personal Interests</label><input id="con-interests" type="text" placeholder="e.g. gardening, classical music, chess…"></div>
+      <div class="form-field"><label>Transportation Needs</label><textarea id="con-transport" placeholder="Medical appointments, preferred times, mobility aids needed…"></textarea></div>
+      <div class="form-field"><label>Special Requests</label><textarea id="con-requests" placeholder="Ongoing requests, preferences, accommodations…"></textarea></div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-header">
       <span class="form-section-icon">👨‍👩‍👧</span>
       <span class="form-section-title">Family Visit Log</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Visitor Name</label><input type="text" placeholder="Name and relationship"></div>
+      <div class="form-field"><label>Visitor Name</label><input id="con-visitor" type="text" placeholder="Name and relationship"></div>
       <div class="form-row">
-        <div class="form-field"><label>Visit Date</label><input type="date"></div>
-        <div class="form-field"><label>Duration</label><input type="text" placeholder="e.g. 2 hours"></div>
+        <div class="form-field"><label>Visit Date</label><input id="con-visit-date" type="date"></div>
+        <div class="form-field"><label>Duration</label><input id="con-visit-dur" type="text" placeholder="e.g. 2 hours"></div>
       </div>
-      <div class="form-field"><label>Notes</label><textarea placeholder="Visit observations, resident mood, family feedback…"></textarea></div>
+      <div class="form-field"><label>Notes</label><textarea id="con-visit-notes" placeholder="Visit observations, resident mood, family feedback…"></textarea></div>
     </div>
   </div>
 </div>
@@ -1584,7 +1583,7 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Preferred Program Types</label>
-        <div class="chip-group">
+        <div class="chip-group" id="act-prefs-chips">
           <div class="chip" onclick="toggleChip(this)">Arts & Crafts</div>
           <div class="chip" onclick="toggleChip(this)">Music</div>
           <div class="chip" onclick="toggleChip(this)">Exercise</div>
@@ -1599,29 +1598,28 @@ html, body { height: auto !important; overflow: auto !important; }
       </div>
       <div class="form-field">
         <label>Group Preference</label>
-        <select><option>Loves groups</option><option>Prefers small groups</option><option>Prefers 1-on-1</option><option>Varies</option></select>
+        <select id="act-group-pref"><option>Loves groups</option><option>Prefers small groups</option><option>Prefers 1-on-1</option><option>Varies</option></select>
       </div>
       <div class="form-field">
         <label>Best Time of Day</label>
-        <select><option>Morning</option><option>Afternoon</option><option>Evening</option><option>No preference</option></select>
+        <select id="act-best-time"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>No preference</option></select>
       </div>
-      <div class="form-field"><label>Mobility Notes</label><input type="text" placeholder="Wheelchair, walker, independent…"></div>
-      <div class="form-field"><label>Cognitive Notes</label><textarea placeholder="Attention span, memory considerations, engagement tips…"></textarea></div>
+      <div class="form-field"><label>Mobility Notes</label><input id="act-mobility" type="text" placeholder="Wheelchair, walker, independent…"></div>
+      <div class="form-field"><label>Cognitive Notes</label><textarea id="act-cognitive" placeholder="Attention span, memory considerations, engagement tips…"></textarea></div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-header">
       <span class="form-section-icon">📊</span>
       <span class="form-section-title">Participation Log</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Program / Activity</label><input type="text" placeholder="e.g. Morning stretch, Bingo, Art class…"></div>
+      <div class="form-field"><label>Program / Activity</label><input id="act-program" type="text" placeholder="e.g. Morning stretch, Bingo, Art class…"></div>
       <div class="form-row">
-        <div class="form-field"><label>Date</label><input type="date"></div>
+        <div class="form-field"><label>Date</label><input id="act-date" type="date"></div>
         <div class="form-field">
           <label>Attended?</label>
-          <select><option>Yes</option><option>No — Refused</option><option>No — Unwell</option><option>No — Sleeping</option></select>
+          <select id="act-attended"><option>Yes</option><option>No — Refused</option><option>No — Unwell</option><option>No — Sleeping</option></select>
         </div>
       </div>
       <div class="form-field">
@@ -1634,7 +1632,7 @@ html, body { height: auto !important; overflow: auto !important; }
           <div class="scale-btn" onclick="selectScale('engage-scale',this)">🌟</div>
         </div>
       </div>
-      <div class="form-field"><label>Notes</label><textarea placeholder="What resonated, what didn't, observations…"></textarea></div>
+      <div class="form-field"><label>Notes</label><textarea id="act-notes" placeholder="What resonated, what didn't, observations…"></textarea></div>
     </div>
   </div>
 </div>
@@ -1649,7 +1647,7 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Pickup Days</label>
-        <div class="chip-group">
+        <div class="chip-group" id="laun-days-chips">
           <div class="chip" onclick="toggleChip(this)">Mon</div>
           <div class="chip" onclick="toggleChip(this)">Tue</div>
           <div class="chip" onclick="toggleChip(this)">Wed</div>
@@ -1661,21 +1659,20 @@ html, body { height: auto !important; overflow: auto !important; }
       </div>
       <div class="form-field">
         <label>Folding Preference</label>
-        <select><option>Folded</option><option>Hung</option><option>Rolled</option><option>Resident hangs own</option></select>
+        <select id="laun-fold"><option>Folded</option><option>Hung</option><option>Rolled</option><option>Resident hangs own</option></select>
       </div>
-      <div class="form-field"><label>Hang Dry Items</label><input type="text" placeholder="e.g. wool sweater, silk blouse…"></div>
+      <div class="form-field"><label>Hang Dry Items</label><input id="laun-hang-dry" type="text" placeholder="e.g. wool sweater, silk blouse…"></div>
       <div class="toggle-row">
         <span class="toggle-label">Do not mix with community laundry</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="laun-no-mix" onclick="toggleSwitch(this)"></div>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Detergent allergy / sensitivity</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="laun-detergent-allergy" onclick="toggleSwitch(this)"></div>
       </div>
-      <div class="form-field"><label>Preferred Detergent</label><input type="text" placeholder="e.g. Tide Free & Gentle…"></div>
+      <div class="form-field"><label>Preferred Detergent</label><input id="laun-detergent" type="text" placeholder="e.g. Tide Free & Gentle…"></div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-header">
       <span class="form-section-icon">👕</span>
@@ -1683,31 +1680,30 @@ html, body { height: auto !important; overflow: auto !important; }
     </div>
     <div class="form-section-body">
       <div class="form-row">
-        <div class="form-field"><label>Pickup Date</label><input type="date"></div>
-        <div class="form-field"><label>Item Count</label><input type="number" placeholder="12"></div>
+        <div class="form-field"><label>Pickup Date</label><input id="laun-pickup-date" type="date"></div>
+        <div class="form-field"><label>Item Count</label><input id="laun-item-count" type="number" placeholder="12"></div>
       </div>
-      <div class="form-field"><label>Items (list)</label><textarea placeholder="3x shirts, 2x pants, 4x socks…"></textarea></div>
+      <div class="form-field"><label>Items (list)</label><textarea id="laun-items" placeholder="3x shirts, 2x pants, 4x socks…"></textarea></div>
       <div class="form-field">
         <label>Status</label>
-        <select><option>Picked Up</option><option>In Wash</option><option>Drying</option><option>Folding</option><option>Returned</option></select>
+        <select id="laun-status"><option>Picked Up</option><option>In Wash</option><option>Drying</option><option>Folding</option><option>Returned</option></select>
       </div>
-      <div class="form-field"><label>Special Instructions</label><input type="text" placeholder="e.g. cold wash only, no dryer…"></div>
+      <div class="form-field"><label>Special Instructions</label><input id="laun-instructions" type="text" placeholder="e.g. cold wash only, no dryer…"></div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-header">
       <span class="form-section-icon">🏷</span>
       <span class="form-section-title">Clothing Inventory / Lost Item</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Item Description</label><input type="text" placeholder="e.g. Blue cardigan — size M"></div>
-      <div class="form-field"><label>Label Code</label><input type="text" placeholder="e.g. MJ-042"></div>
+      <div class="form-field"><label>Item Description</label><input id="laun-item-desc" type="text" placeholder="e.g. Blue cardigan — size M"></div>
+      <div class="form-field"><label>Label Code</label><input id="laun-label-code" type="text" placeholder="e.g. MJ-042"></div>
       <div class="toggle-row">
         <span class="toggle-label">Flag as missing</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="laun-missing" onclick="toggleSwitch(this)"></div>
       </div>
-      <div class="form-field"><label>Notes</label><input type="text" placeholder="Last seen, last washed…"></div>
+      <div class="form-field"><label>Notes</label><input id="laun-notes" type="text" placeholder="Last seen, last washed…"></div>
     </div>
   </div>
 </div>
@@ -1721,37 +1717,36 @@ html, body { height: auto !important; overflow: auto !important; }
     </div>
     <div class="form-section-body">
       <div class="form-row">
-        <div class="form-field"><label>Move-In Date</label><input type="date"></div>
-        <div class="form-field"><label>Move-Out Date</label><input type="date"></div>
+        <div class="form-field"><label>Move-In Date</label><input id="sales-move-in" type="date"></div>
+        <div class="form-field"><label>Move-Out Date</label><input id="sales-move-out" type="date"></div>
       </div>
       <div class="form-field">
         <label>Referral Source</label>
-        <select><option>Family / Self</option><option>Hospital</option><option>Physician</option><option>Home Health Agency</option><option>Hospice</option><option>Digital / Web</option><option>Community Event</option><option>Existing Resident</option><option>Other</option></select>
+        <select id="sales-referral"><option>Family / Self</option><option>Hospital</option><option>Physician</option><option>Home Health Agency</option><option>Hospice</option><option>Digital / Web</option><option>Community Event</option><option>Existing Resident</option><option>Other</option></select>
       </div>
-      <div class="form-field"><label>Discharge Reason (if applicable)</label><input type="text" placeholder="Hospitalized, higher level of care, deceased…"></div>
+      <div class="form-field"><label>Discharge Reason (if applicable)</label><input id="sales-discharge" type="text" placeholder="Hospitalized, higher level of care, deceased…"></div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-header">
       <span class="form-section-icon">🗓</span>
       <span class="form-section-title">Tour Log</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><label>Prospect Name</label><input type="text" placeholder="Jane Smith — Daughter"></div>
+      <div class="form-field"><label>Prospect Name</label><input id="sales-prospect" type="text" placeholder="Jane Smith — Daughter"></div>
       <div class="form-row">
-        <div class="form-field"><label>Tour Date</label><input type="datetime-local"></div>
+        <div class="form-field"><label>Tour Date</label><input id="sales-tour-date" type="datetime-local"></div>
         <div class="form-field">
           <label>Tour Type</label>
-          <select><option>In-person</option><option>Virtual</option><option>Phone</option></select>
+          <select id="sales-tour-type"><option>In-person</option><option>Virtual</option><option>Phone</option></select>
         </div>
       </div>
       <div class="form-field">
         <label>Outcome</label>
-        <select><option>Interested — Follow up</option><option>Very Interested — Deposit</option><option>Needs more time</option><option>Not a fit</option><option>Chose competitor</option></select>
+        <select id="sales-outcome"><option>Interested — Follow up</option><option>Very Interested — Deposit</option><option>Needs more time</option><option>Not a fit</option><option>Chose competitor</option></select>
       </div>
-      <div class="form-field"><label>Objections / Concerns</label><textarea placeholder="Price, location, care level, timing…"></textarea></div>
-      <div class="form-field"><label>Sales Notes</label><textarea placeholder="Additional context for follow-up…"></textarea></div>
+      <div class="form-field"><label>Objections / Concerns</label><textarea id="sales-objections" placeholder="Price, location, care level, timing…"></textarea></div>
+      <div class="form-field"><label>Sales Notes</label><textarea id="sales-notes" placeholder="Additional context for follow-up…"></textarea></div>
     </div>
   </div>
 </div>
@@ -1766,27 +1761,26 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Contract Type</label>
-        <select><option>Month-to-Month</option><option>Annual</option><option>Respite / Short Stay</option></select>
+        <select id="adm-contract-type"><option>Month-to-Month</option><option>Annual</option><option>Respite / Short Stay</option></select>
       </div>
       <div class="form-row">
-        <div class="form-field"><label>Monthly Rate ($)</label><input type="number" placeholder="4500"></div>
-        <div class="form-field"><label>Rate Lock Until</label><input type="date"></div>
+        <div class="form-field"><label>Monthly Rate ($)</label><input id="adm-rate" type="number" placeholder="4500"></div>
+        <div class="form-field"><label>Rate Lock Until</label><input id="adm-rate-lock" type="date"></div>
       </div>
       <div class="form-field">
         <label>Payment Source</label>
-        <select><option>Private Pay</option><option>Long-Term Care Insurance</option><option>Medicare</option><option>Medicaid</option><option>VA Benefits</option><option>Mixed</option></select>
+        <select id="adm-payment-source"><option>Private Pay</option><option>Long-Term Care Insurance</option><option>Medicare</option><option>Medicaid</option><option>VA Benefits</option><option>Mixed</option></select>
       </div>
-      <div class="form-field"><label>Insurance Carrier</label><input type="text" placeholder="Carrier name"></div>
-      <div class="form-field"><label>Policy Number</label><input type="text" placeholder="Policy #"></div>
+      <div class="form-field"><label>Insurance Carrier</label><input id="adm-insurance" type="text" placeholder="Carrier name"></div>
+      <div class="form-field"><label>Policy Number</label><input id="adm-policy" type="text" placeholder="Policy #"></div>
       <div class="toggle-row">
         <span class="toggle-label">LTC policy on file</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="adm-ltc" onclick="toggleSwitch(this)"></div>
       </div>
-      <div class="form-field"><label>Responsible Party</label><input type="text" placeholder="Name — Relationship — Phone"></div>
-      <div class="form-field"><label>Billing Notes</label><textarea placeholder="Balance, payment arrangements, disputes…"></textarea></div>
+      <div class="form-field"><label>Responsible Party</label><input id="adm-responsible" type="text" placeholder="Name — Relationship — Phone"></div>
+      <div class="form-field"><label>Billing Notes</label><textarea id="adm-billing-notes" placeholder="Balance, payment arrangements, disputes…"></textarea></div>
     </div>
   </div>
-
   <div class="form-section">
     <div class="form-section-header">
       <span class="form-section-icon">🛡</span>
@@ -1795,13 +1789,13 @@ html, body { height: auto !important; overflow: auto !important; }
     <div class="form-section-body">
       <div class="form-field">
         <label>Flag Type</label>
-        <select><option>Missing Document</option><option>Expired Assessment</option><option>Regulatory Deadline</option><option>Licensing</option><option>Billing Dispute</option><option>Other</option></select>
+        <select id="adm-flag-type"><option>Missing Document</option><option>Expired Assessment</option><option>Regulatory Deadline</option><option>Licensing</option><option>Billing Dispute</option><option>Other</option></select>
       </div>
-      <div class="form-field"><label>Description</label><textarea placeholder="Describe the compliance issue…"></textarea></div>
-      <div class="form-field"><label>Due Date</label><input type="date"></div>
+      <div class="form-field"><label>Description</label><textarea id="adm-flag-desc" placeholder="Describe the compliance issue…"></textarea></div>
+      <div class="form-field"><label>Due Date</label><input id="adm-flag-due" type="date"></div>
       <div class="toggle-row">
         <span class="toggle-label">Resolved</span>
-        <div class="toggle" onclick="toggleSwitch(this)"></div>
+        <div class="toggle" id="adm-resolved" onclick="toggleSwitch(this)"></div>
       </div>
     </div>
   </div>
@@ -2512,6 +2506,7 @@ function openResident(id) {
 
   buildDeptTabs();
   switchTab('core');
+  loadDeptData(r);
   showScreen('screen-form');
 }
 
@@ -2561,19 +2556,307 @@ function switchTab(name) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SAVE RECORD
+   SAVE RECORD — reads all dept fields into deptData
 ═══════════════════════════════════════════════════════ */
+function getVal(id)      { var e=document.getElementById(id); return e ? e.value.trim() : ''; }
+function getNum(id)      { var e=document.getElementById(id); return e && e.value ? Number(e.value) : null; }
+function getToggle(id)   { var e=document.getElementById(id); return e ? e.classList.contains('on') : false; }
+function setToggle(id,v) { var e=document.getElementById(id); if(e){ e.classList.toggle('on', !!v); } }
+function setVal(id,v)    { var e=document.getElementById(id); if(e && v!=null) e.value = v; }
+function setSelect(id,v) {
+  var e=document.getElementById(id);
+  if(!e||!v) return;
+  for(var i=0;i<e.options.length;i++){
+    if(e.options[i].value===v||e.options[i].text===v){ e.selectedIndex=i; break; }
+  }
+}
+function getChips(groupId) {
+  var chips = document.querySelectorAll('#' + groupId + ' .chip.selected');
+  var result = [];
+  chips.forEach(function(c){ result.push(c.textContent.trim()); });
+  return result;
+}
+function setChips(groupId, values) {
+  if(!values||!values.length) return;
+  document.querySelectorAll('#' + groupId + ' .chip').forEach(function(c) {
+    c.classList.toggle('selected', values.indexOf(c.textContent.trim()) >= 0);
+  });
+}
+function getScaleVal(groupId) {
+  var sel = document.querySelector('#' + groupId + ' .scale-btn.selected');
+  return sel ? sel.textContent.trim() : null;
+}
+function setScaleVal(groupId, val) {
+  if(!val) return;
+  document.querySelectorAll('#' + groupId + ' .scale-btn').forEach(function(b) {
+    b.classList.toggle('selected', b.textContent.trim() === val);
+  });
+}
+
+function collectDeptData() {
+  var d = {};
+  var dept = currentUser ? currentUser.dept : 'core';
+
+  if(dept === 'clinical' || dept === 'admin') {
+    d.clinical = {
+      bpSys:             getVal('clin-bp-sys'),
+      bpDia:             getVal('clin-bp-dia'),
+      pulse:             getVal('clin-pulse'),
+      temp:              getVal('clin-temp'),
+      spo2:              getVal('clin-spo2'),
+      weight:            getVal('clin-weight'),
+      painLevel:         getScaleVal('pain-scale'),
+      fallRisk:          getVal('clin-fall-risk'),
+      dnr:               getToggle('clin-dnr'),
+      bedAlarm:          getToggle('clin-bed-alarm'),
+      fallMat:           getToggle('clin-fall-mat'),
+      wandering:         getToggle('clin-wandering'),
+      medName:           getVal('clin-med-name'),
+      medFlag:           getVal('clin-med-flag'),
+      medBy:             getVal('clin-med-by'),
+      medNotes:          getVal('clin-med-notes'),
+      woundLoc:          getVal('clin-wound-loc'),
+      woundStage:        getVal('clin-wound-stage'),
+      woundHealed:       getVal('clin-wound-healed'),
+      woundTx:           getVal('clin-wound-tx'),
+      incidentType:      getVal('clin-incident-type'),
+      incidentDt:        getVal('clin-incident-dt'),
+      incidentDesc:      getVal('clin-incident-desc'),
+      familyNotified:    getToggle('clin-family-notified'),
+      physicianNotified: getToggle('clin-physician-notified'),
+      notes:             getVal('clin-notes'),
+    };
+  }
+  if(dept === 'dining' || dept === 'admin') {
+    d.dining = {
+      dietType:     getVal('din-diet-type'),
+      texture:      getVal('din-texture'),
+      fluidRestrict:getVal('din-fluid'),
+      allergies:    getChips('allergy-chips'),
+      otherAllergy: getVal('din-other-allergy'),
+      preferences:  getVal('din-prefs'),
+      dislikes:     getVal('din-dislikes'),
+      diningRoom:   getVal('din-room'),
+      seatPref:     getVal('din-seat'),
+      trayDelivery: getToggle('din-tray'),
+      meal:         getVal('din-meal'),
+      intakePct:    getScaleVal('intake-scale'),
+      fluidOz:      getVal('din-fluid-oz'),
+      mealRefused:  getToggle('din-refused'),
+      notes:        getVal('din-notes'),
+    };
+  }
+  if(dept === 'housekeeping' || dept === 'admin') {
+    d.housekeeping = {
+      serviceType:  getVal('hk-service-type'),
+      completed:    getToggle('hk-completed'),
+      dneUntil:     getVal('hk-dne'),
+      maintFlag:    getVal('hk-maint-flag'),
+      notes:        getVal('hk-notes'),
+    };
+  }
+  if(dept === 'maintenance' || dept === 'admin') {
+    d.maintenance = {
+      issueType:   getVal('maint-issue-type'),
+      priority:    getVal('maint-priority'),
+      description: getVal('maint-desc'),
+      safetyFlag:  getToggle('maint-safety'),
+      status:      getVal('maint-status'),
+      assignedTo:  getVal('maint-assigned'),
+      resolution:  getVal('maint-resolution'),
+    };
+  }
+  if(dept === 'concierge' || dept === 'admin') {
+    d.concierge = {
+      interests:   getVal('con-interests'),
+      transportNeeds: getVal('con-transport'),
+      requests:    getVal('con-requests'),
+      visitorName: getVal('con-visitor'),
+      visitDate:   getVal('con-visit-date'),
+      visitDur:    getVal('con-visit-dur'),
+      visitNotes:  getVal('con-visit-notes'),
+    };
+  }
+  if(dept === 'activities' || dept === 'admin') {
+    d.activities = {
+      preferredCategories: getChips('act-prefs-chips'),
+      groupPref:    getVal('act-group-pref'),
+      bestTime:     getVal('act-best-time'),
+      mobility:     getVal('act-mobility'),
+      cognitive:    getVal('act-cognitive'),
+      lastProgram:  getVal('act-program'),
+      lastDate:     getVal('act-date'),
+      attended:     getVal('act-attended'),
+      engagementLevel: getScaleVal('engage-scale'),
+      notes:        getVal('act-notes'),
+    };
+  }
+  if(dept === 'laundry' || dept === 'admin') {
+    d.laundry = {
+      pickupDays:       getChips('laun-days-chips'),
+      foldPref:         getVal('laun-fold'),
+      hangDry:          getVal('laun-hang-dry'),
+      noMix:            getToggle('laun-no-mix'),
+      detergentAllergy: getToggle('laun-detergent-allergy'),
+      detergent:        getVal('laun-detergent'),
+      pickupDate:       getVal('laun-pickup-date'),
+      itemCount:        getVal('laun-item-count'),
+      items:            getVal('laun-items'),
+      status:           getVal('laun-status'),
+      instructions:     getVal('laun-instructions'),
+      itemDescription:  getVal('laun-item-desc'),
+      labelCode:        getVal('laun-label-code'),
+      flagMissing:      getToggle('laun-missing'),
+      notes:            getVal('laun-notes'),
+    };
+  }
+  if(dept === 'sales' || dept === 'admin') {
+    d.sales = {
+      moveInDate:   getVal('sales-move-in'),
+      moveOutDate:  getVal('sales-move-out'),
+      referralSource: getVal('sales-referral'),
+      dischargeReason: getVal('sales-discharge'),
+      prospectName: getVal('sales-prospect'),
+      tourDate:     getVal('sales-tour-date'),
+      tourType:     getVal('sales-tour-type'),
+      outcome:      getVal('sales-outcome'),
+      objections:   getVal('sales-objections'),
+      notes:        getVal('sales-notes'),
+    };
+  }
+  if(dept === 'admin') {
+    d.admin = {
+      contractType:   getVal('adm-contract-type'),
+      monthlyRate:    getVal('adm-rate'),
+      rateLockUntil:  getVal('adm-rate-lock'),
+      paymentSource:  getVal('adm-payment-source'),
+      insurance:      getVal('adm-insurance'),
+      policyNumber:   getVal('adm-policy'),
+      ltcOnFile:      getToggle('adm-ltc'),
+      responsibleParty: getVal('adm-responsible'),
+      billingNotes:   getVal('adm-billing-notes'),
+      flagType:       getVal('adm-flag-type'),
+      flagDesc:       getVal('adm-flag-desc'),
+      flagDue:        getVal('adm-flag-due'),
+      resolved:       getToggle('adm-resolved'),
+    };
+  }
+  return d;
+}
+
+function loadDeptData(r) {
+  var d = r.deptData || {};
+
+  // Clinical
+  var c = d.clinical || {};
+  setVal('clin-bp-sys', c.bpSys); setVal('clin-bp-dia', c.bpDia);
+  setVal('clin-pulse', c.pulse);  setVal('clin-temp', c.temp);
+  setVal('clin-spo2', c.spo2);   setVal('clin-weight', c.weight);
+  setScaleVal('pain-scale', c.painLevel);
+  setSelect('clin-fall-risk', c.fallRisk);
+  setToggle('clin-dnr', c.dnr); setToggle('clin-bed-alarm', c.bedAlarm);
+  setToggle('clin-fall-mat', c.fallMat); setToggle('clin-wandering', c.wandering);
+  setVal('clin-med-name', c.medName); setSelect('clin-med-flag', c.medFlag);
+  setVal('clin-med-by', c.medBy); setVal('clin-med-notes', c.medNotes);
+  setVal('clin-wound-loc', c.woundLoc); setSelect('clin-wound-stage', c.woundStage);
+  setSelect('clin-wound-healed', c.woundHealed); setVal('clin-wound-tx', c.woundTx);
+  setSelect('clin-incident-type', c.incidentType); setVal('clin-incident-dt', c.incidentDt);
+  setVal('clin-incident-desc', c.incidentDesc);
+  setToggle('clin-family-notified', c.familyNotified);
+  setToggle('clin-physician-notified', c.physicianNotified);
+  setVal('clin-notes', c.notes);
+
+  // Dining
+  var dn = d.dining || {};
+  setSelect('din-diet-type', dn.dietType); setSelect('din-texture', dn.texture);
+  setSelect('din-fluid', dn.fluidRestrict);
+  setChips('allergy-chips', dn.allergies);
+  setVal('din-other-allergy', dn.otherAllergy); setVal('din-prefs', dn.preferences);
+  setVal('din-dislikes', dn.dislikes); setVal('din-room', dn.diningRoom);
+  setVal('din-seat', dn.seatPref); setToggle('din-tray', dn.trayDelivery);
+  setSelect('din-meal', dn.meal); setScaleVal('intake-scale', dn.intakePct);
+  setVal('din-fluid-oz', dn.fluidOz); setToggle('din-refused', dn.mealRefused);
+  setVal('din-notes', dn.notes);
+
+  // Housekeeping
+  var hk = d.housekeeping || {};
+  setSelect('hk-service-type', hk.serviceType); setToggle('hk-completed', hk.completed);
+  setVal('hk-dne', hk.dneUntil); setVal('hk-maint-flag', hk.maintFlag);
+  setVal('hk-notes', hk.notes);
+
+  // Maintenance
+  var mt = d.maintenance || {};
+  setSelect('maint-issue-type', mt.issueType); setSelect('maint-priority', mt.priority);
+  setVal('maint-desc', mt.description); setToggle('maint-safety', mt.safetyFlag);
+  setSelect('maint-status', mt.status); setVal('maint-assigned', mt.assignedTo);
+  setVal('maint-resolution', mt.resolution);
+
+  // Concierge
+  var co = d.concierge || {};
+  setVal('con-interests', co.interests); setVal('con-transport', co.transportNeeds);
+  setVal('con-requests', co.requests); setVal('con-visitor', co.visitorName);
+  setVal('con-visit-date', co.visitDate); setVal('con-visit-dur', co.visitDur);
+  setVal('con-visit-notes', co.visitNotes);
+
+  // Activities
+  var ac = d.activities || {};
+  setChips('act-prefs-chips', ac.preferredCategories);
+  setSelect('act-group-pref', ac.groupPref); setSelect('act-best-time', ac.bestTime);
+  setVal('act-mobility', ac.mobility); setVal('act-cognitive', ac.cognitive);
+  setVal('act-program', ac.lastProgram); setVal('act-date', ac.lastDate);
+  setSelect('act-attended', ac.attended); setScaleVal('engage-scale', ac.engagementLevel);
+  setVal('act-notes', ac.notes);
+
+  // Laundry
+  var la = d.laundry || {};
+  setChips('laun-days-chips', la.pickupDays); setSelect('laun-fold', la.foldPref);
+  setVal('laun-hang-dry', la.hangDry); setToggle('laun-no-mix', la.noMix);
+  setToggle('laun-detergent-allergy', la.detergentAllergy); setVal('laun-detergent', la.detergent);
+  setVal('laun-pickup-date', la.pickupDate); setVal('laun-item-count', la.itemCount);
+  setVal('laun-items', la.items); setSelect('laun-status', la.status);
+  setVal('laun-instructions', la.instructions); setVal('laun-item-desc', la.itemDescription);
+  setVal('laun-label-code', la.labelCode); setToggle('laun-missing', la.flagMissing);
+  setVal('laun-notes', la.notes);
+
+  // Sales
+  var sa = d.sales || {};
+  setVal('sales-move-in', sa.moveInDate); setVal('sales-move-out', sa.moveOutDate);
+  setSelect('sales-referral', sa.referralSource); setVal('sales-discharge', sa.dischargeReason);
+  setVal('sales-prospect', sa.prospectName); setVal('sales-tour-date', sa.tourDate);
+  setSelect('sales-tour-type', sa.tourType); setSelect('sales-outcome', sa.outcome);
+  setVal('sales-objections', sa.objections); setVal('sales-notes', sa.notes);
+
+  // Admin
+  var adm = d.admin || {};
+  setSelect('adm-contract-type', adm.contractType); setVal('adm-rate', adm.monthlyRate);
+  setVal('adm-rate-lock', adm.rateLockUntil); setSelect('adm-payment-source', adm.paymentSource);
+  setVal('adm-insurance', adm.insurance); setVal('adm-policy', adm.policyNumber);
+  setToggle('adm-ltc', adm.ltcOnFile); setVal('adm-responsible', adm.responsibleParty);
+  setVal('adm-billing-notes', adm.billingNotes); setSelect('adm-flag-type', adm.flagType);
+  setVal('adm-flag-desc', adm.flagDesc); setVal('adm-flag-due', adm.flagDue);
+  setToggle('adm-resolved', adm.resolved);
+}
+
 function saveClick() {
   if (!currentResident) return;
 
-  currentResident.first     = document.getElementById('core-first').value.trim();
-  currentResident.last      = document.getElementById('core-last').value.trim();
-  currentResident.room      = document.getElementById('core-room').value.trim();
+  // Core fields
+  currentResident.first     = getVal('core-first');
+  currentResident.last      = getVal('core-last');
+  currentResident.room      = getVal('core-room');
   currentResident.dob       = document.getElementById('core-dob').value;
-  currentResident.physician = document.getElementById('core-physician').value.trim();
-  currentResident.notes     = document.getElementById('core-notes').value.trim();
+  currentResident.physician = getVal('core-physician');
+  currentResident.notes     = getVal('core-notes');
   currentResident.updatedAt = new Date().toISOString();
   currentResident.updatedBy = currentUser ? currentUser.name : '';
+
+  // Dept fields — merge into existing deptData to preserve other depts' data
+  if (!currentResident.deptData) currentResident.deptData = {};
+  var newDeptData = collectDeptData();
+  var keys = Object.keys(newDeptData);
+  for (var i = 0; i < keys.length; i++) {
+    currentResident.deptData[keys[i]] = newDeptData[keys[i]];
+  }
 
   var idx = allResidents.findIndex(function(r) { return r.id === currentResident.id; });
   if (idx >= 0) allResidents[idx] = currentResident;
@@ -2589,9 +2872,7 @@ function saveClick() {
   }
 }
 
-async function saveRecord() {
-  saveClick();
-}
+async function saveRecord() { saveClick(); }
 
 /* ═══════════════════════════════════════════════════════
    USER MANAGEMENT
