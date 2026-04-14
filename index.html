@@ -977,13 +977,12 @@ color: var(–muted);
 font-size: 13px;
 }
 
-/* Print button in reports header */
 .btn-print {
 background: var(–surface2);
 border: 1px solid var(–border2);
 border-radius: var(–radius-sm);
 color: var(–muted);
-font-family: ‘Syne’, sans-serif;
+font-family: ‘Syne’, var(–font-display);
 font-size: 12px;
 font-weight: 700;
 padding: 8px 14px;
@@ -994,6 +993,38 @@ gap: 6px;
 transition: background 0.15s;
 }
 .btn-print:active { background: var(–surface3); }
+
+/* Dept selector for admin reports */
+.report-dept-selector {
+display: flex;
+align-items: center;
+gap: 10px;
+background: var(–surface);
+border: 1px solid var(–border2);
+border-radius: var(–radius-sm);
+padding: 2px 4px 2px 12px;
+}
+.report-dept-selector label {
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(–muted);
+white-space: nowrap;
+}
+.report-dept-selector select {
+background: transparent;
+border: none;
+color: var(–text);
+font-family: ‘Nunito’, var(–font-body);
+font-size: 13px;
+font-weight: 600;
+padding: 8px 4px;
+outline: none;
+cursor: pointer;
+-webkit-appearance: none;
+appearance: none;
+}
 
 /* ═══════════════════════════════════════════════
 PRINT STYLES
@@ -2764,10 +2795,13 @@ function fmtTime() {
 }());
 
 /* ─── BOTTOM NAV ─── */
-let reportPeriod = 'today'; // 'today' | 'week'
+let reportPeriod   = 'today'; // 'today' | 'week'
+let reportViewDept = null;    // null = use logged-in user's dept; set by admin selector
 
 function switchNav(tab) {
   if (tab === 'reports') {
+    // Admin: default to their own dept on first open each session
+    if (!reportViewDept && currentUser) reportViewDept = currentUser.dept;
     generateReport(reportPeriod);
     showScreen('screen-reports');
     var badge = document.getElementById('report-dept-badge');
@@ -2809,23 +2843,50 @@ function setPeriod(p) {
   generateReport(p);
 }
 
+function setReportDept(val) {
+  reportViewDept = val;
+  generateReport(reportPeriod);
+}
+
 /* ─── REPORT GENERATOR ─── */
 function generateReport(period) {
   if (!currentUser) return;
-  var dept  = currentUser.dept;
-  var cfg   = DEPT_CONFIG[dept] || {};
+
+  // Admins can view any dept; others always see their own
+  var isAdmin = currentUser.role === 'admin';
+  var dept = (isAdmin && reportViewDept) ? reportViewDept : currentUser.dept;
+  var cfg  = DEPT_CONFIG[dept] || {};
+
   var now   = new Date();
   var today = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   var label = period === 'today' ? 'Today' : 'This Week';
   var body  = document.getElementById('reports-body');
   if (!body) return;
 
+  // Period toggle
   var periodHtml =
     '<div class="period-toggle">' +
       '<div class="period-btn ' + (period==='today'?'active':'') + '" data-period="today" onclick="setPeriod(\'today\')">Today</div>' +
       '<div class="period-btn ' + (period==='week'?'active':'') + '" data-period="week" onclick="setPeriod(\'week\')">This Week</div>' +
     '</div>';
 
+  // Admin dept selector
+  var selectorHtml = '';
+  if (isAdmin) {
+    var depts = ['clinical','dining','housekeeping','maintenance','concierge','activities','laundry','sales','admin'];
+    var opts = depts.map(function(d) {
+      var c = DEPT_CONFIG[d] || {};
+      var selected = d === dept ? ' selected' : '';
+      return '<option value="' + d + '"' + selected + '>' + (c.icon||'') + ' ' + (c.label||d) + '</option>';
+    }).join('');
+    selectorHtml =
+      '<div class="report-dept-selector">' +
+        '<label>Viewing</label>' +
+        '<select onchange="setReportDept(this.value)">' + opts + '</select>' +
+      '</div>';
+  }
+
+  // Report header card
   var headerHtml =
     '<div class="report-header-card">' +
       '<div class="rhc-inner">' +
@@ -2835,7 +2896,11 @@ function generateReport(period) {
     '</div>';
 
   var content = buildDeptReport(dept, period);
-  body.innerHTML = periodHtml + headerHtml + content;
+  body.innerHTML = periodHtml + selectorHtml + headerHtml + content;
+
+  // Update badge in header
+  var badge = document.getElementById('report-dept-badge');
+  if (badge) badge.textContent = cfg.label || dept;
 }
 
 function buildDeptReport(dept, period) {
