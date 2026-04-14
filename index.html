@@ -3445,7 +3445,7 @@ function buildDeptReport(dept, period) {
     var badgeHtml = badge
       ? '<div class="rr-badge ' + badgeType + '">' + badge + '</div>'
       : '';
-    return '<div class="report-row" onclick="openResidentToTab(\'' + r.id + '\',\'' + tab + '\'); switchNav(\'residents\');">' +
+    return '<div class="report-row" onclick="openResidentToTab(\'' + r.id + '\',\'' + tab + '\');">' +
       '<div class="rr-avatar">' + initials + '</div>' +
       '<div class="rr-info">' +
         '<div class="rr-name">' + (r.last||'') + ', ' + (r.first||'') +
