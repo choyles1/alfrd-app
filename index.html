@@ -654,49 +654,70 @@ box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 .toggle.on::after { left: 20px; }
 
 /* Chip select */
-.chip-group { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-padding: 5px 12px;
+padding: 7px 14px;
 border-radius: 100px;
 background: var(–surface2);
 border: 1px solid var(–border2);
-font-size: 12px;
+font-size: 13px;
+font-weight: 500;
 color: var(–muted);
 cursor: pointer;
-transition: all 0.15s;
-font-family: ‘Nunito’, sans-serif;
+transition: background 0.15s, border-color 0.15s, color 0.15s;
+font-family: ‘Nunito’, var(–font-body);
+user-select: none;
+-webkit-user-select: none;
 }
 .chip.selected {
-background: var(–dept-focus-glow, var(–amber-glow));
+background: var(–dept-focus-color, var(–amber));
 border-color: var(–dept-focus-color, var(–amber));
-color: var(–dept-focus-color, var(–amber));
+color: #0e1117;
 font-weight: 600;
 }
 
 /* Scale input */
-.scale-wrap { display: flex; gap: 6px; }
+.scale-wrap {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+}
 .scale-btn {
+min-width: 40px;
+height: 40px;
 flex: 1;
-height: 36px;
 background: var(–surface2);
 border: 1px solid var(–border2);
-border-radius: 6px;
+border-radius: 8px;
 color: var(–muted);
-font-family: ‘Syne’, sans-serif;
+font-family: ‘Syne’, var(–font-display);
 font-weight: 700;
 font-size: 13px;
 cursor: pointer;
-display: flex; align-items: center; justify-content: center;
-transition: all 0.15s;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: background 0.15s, border-color 0.15s, color 0.15s;
+user-select: none;
+-webkit-user-select: none;
 }
 .scale-btn.selected {
 background: var(–dept-focus-color, var(–amber));
-border-color: transparent;
+border-color: var(–dept-focus-color, var(–amber));
 color: #0e1117;
+font-weight: 800;
 }
 
-/* Save bar */
-.save-bar {
+/* Pain scale — 11 buttons, wrap into 2 rows on mobile */
+#pain-scale .scale-btn {
+min-width: 36px;
+flex: 0 0 calc(16.6% - 6px);
+}
+/* Intake scale — 5 buttons, always single row */
+#intake-scale .scale-btn {
+flex: 1;
+font-size: 11px;
+}
 background: var(–surface);
 border-top: 1px solid var(–border);
 padding: 12px 16px;
@@ -3133,13 +3154,19 @@ function toggleUserActive(id) {
 }
 
 function toggleSwitch(el) { el.classList.toggle('on'); }
-function toggleChip(el)   { el.classList.toggle('selected'); }
+
+function toggleChip(el) {
+  el.classList.toggle('selected');
+  return false;
+}
 
 function selectScale(groupId, el) {
-  document.querySelectorAll('#' + groupId + ' .scale-btn').forEach(function(b) {
-    b.classList.remove('selected');
-  });
+  var btns = document.querySelectorAll('#' + groupId + ' .scale-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('selected');
+  }
   el.classList.add('selected');
+  return false;
 }
 
 /* ═══════════════════════════════════════════════════════
