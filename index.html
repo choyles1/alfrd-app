@@ -2814,327 +2814,359 @@ function setPeriod(p) {
 
 /* ─── REPORT GENERATOR ─── */
 function generateReport(period) {
-  const dept  = currentUser.dept;
-  const cfg   = DEPT_CONFIG[dept];
-  const now   = new Date();
-  const today = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const label = period === 'today' ? 'Today' : 'This Week';
-  const body  = document.getElementById('reports-body');
+  if (!currentUser) return;
+  var dept  = currentUser.dept;
+  var cfg   = DEPT_CONFIG[dept] || {};
+  var now   = new Date();
+  var today = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  var label = period === 'today' ? 'Today' : 'This Week';
+  var body  = document.getElementById('reports-body');
+  if (!body) return;
 
-  // Build period toggle HTML
-  const periodHtml = `
-    <div class="period-toggle">
-      <div class="period-btn ${period==='today'?'active':''}" data-period="today" onclick="setPeriod('today')">Today</div>
-      <div class="period-btn ${period==='week'?'active':''}" data-period="week" onclick="setPeriod('week')">This Week</div>
-    </div>`;
+  var periodHtml =
+    '<div class="period-toggle">' +
+      '<div class="period-btn ' + (period==='today'?'active':'') + '" data-period="today" onclick="setPeriod(\'today\')">Today</div>' +
+      '<div class="period-btn ' + (period==='week'?'active':'') + '" data-period="week" onclick="setPeriod(\'week\')">This Week</div>' +
+    '</div>';
 
-  // Report header
-  const headerHtml = `
-    <div class="report-header-card">
-      <div class="rhc-inner">
-        <div class="report-dept">${cfg.icon} ${cfg.label} Report</div>
-        <div class="report-meta">${today} · ${currentUser.name} · ${label}</div>
-      </div>
-    </div>`;
+  var headerHtml =
+    '<div class="report-header-card">' +
+      '<div class="rhc-inner">' +
+        '<div class="report-dept">' + (cfg.icon||'') + ' ' + (cfg.label||dept) + ' Report</div>' +
+        '<div class="report-meta">' + today + ' &nbsp;·&nbsp; ' + currentUser.name + ' &nbsp;·&nbsp; ' + label + '</div>' +
+      '</div>' +
+    '</div>';
 
-  // Build dept-specific content
-  const content = buildDeptReport(dept, period);
-
+  var content = buildDeptReport(dept, period);
   body.innerHTML = periodHtml + headerHtml + content;
 }
 
 function buildDeptReport(dept, period) {
-  const R = RESIDENTS; // use full resident list
+  // Always use live allResidents — never the seed constant
+  var R = allResidents || [];
 
   // ── Helpers ──
-  const activeResidents = R.filter(r => r.care !== 'Discharged');
-  const memCare   = R.filter(r => r.care === 'Memory Care');
-  const skilled   = R.filter(r => r.care === 'Skilled Nursing');
-  const withAlerts = R.filter(r => r.alerts.length > 0);
-  const urgents   = R.filter(r => r.alerts.some(a => a.type === 'urgent'));
+  var active   = R.filter(function(r){ return r.care !== 'Discharged'; });
+  var memCare  = R.filter(function(r){ return r.care === 'Memory Care'; });
+  var skilled  = R.filter(function(r){ return r.care === 'Skilled Nursing'; });
+  var withAlerts = R.filter(function(r){ return r.alerts && r.alerts.length > 0; });
+  var urgents  = R.filter(function(r){ return r.alerts && r.alerts.some(function(a){ return a.type==='urgent'; }); });
 
-  const residentRow = (r, detail, badge, badgeType='info') => `
-    <div class="report-row" onclick="openResident(${r.id}); switchNav('residents');">
-      <div class="rr-avatar">${r.first[0]}${r.last[0]}</div>
-      <div class="rr-info">
-        <div class="rr-name">${r.last}, ${r.first} &nbsp;<span style="font-weight:400;color:var(--muted);font-size:11px">Rm ${r.room}</span></div>
-        <div class="rr-detail">${detail}</div>
-      </div>
-      ${badge ? `<div class="rr-badge ${badgeType}">${badge}</div>` : ''}
-    </div>`;
+  function residentRow(r, detail, badge, badgeType) {
+    badgeType = badgeType || 'info';
+    var initials = ((r.first||'')[0]||'') + ((r.last||'')[0]||'');
+    var badgeHtml = badge
+      ? '<div class="rr-badge ' + badgeType + '">' + badge + '</div>'
+      : '';
+    return '<div class="report-row" onclick="openResident(\'' + r.id + '\'); switchNav(\'residents\');">' +
+      '<div class="rr-avatar">' + initials + '</div>' +
+      '<div class="rr-info">' +
+        '<div class="rr-name">' + (r.last||'') + ', ' + (r.first||'') +
+          ' &nbsp;<span style="font-weight:400;color:var(--muted);font-size:11px">Rm ' + (r.room||'—') + '</span></div>' +
+        '<div class="rr-detail">' + detail + '</div>' +
+      '</div>' +
+      badgeHtml +
+    '</div>';
+  }
 
-  const section = (title, rows) => `
-    <div class="report-section">
-      <div class="report-section-title">${title}</div>
-      ${rows || `<div class="report-empty">No items to report</div>`}
-    </div>`;
+  function section(title, rowsHtml) {
+    return '<div class="report-section">' +
+      '<div class="report-section-title">' + title + '</div>' +
+      (rowsHtml || '<div class="report-empty">No items to report</div>') +
+    '</div>';
+  }
 
-  const stats = (items) => `
-    <div class="stat-row">
-      ${items.map(([num,lbl]) => `
-        <div class="stat-card">
-          <div class="stat-num">${num}</div>
-          <div class="stat-label">${lbl}</div>
-        </div>`).join('')}
-    </div>`;
+  function stats(items) {
+    return '<div class="stat-row">' +
+      items.map(function(item) {
+        return '<div class="stat-card">' +
+          '<div class="stat-num">' + item[0] + '</div>' +
+          '<div class="stat-label">' + item[1] + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
 
-  // ── Per-dept reports ──
+  function emptyState(msg) {
+    return '<div class="report-empty">' + (msg || 'No data yet — add residents to see this report.') + '</div>';
+  }
+
+  if (!R.length) {
+    return emptyState('No residents in the system yet.');
+  }
+
+  // ── Per-dept reports driven by live data ──
   switch(dept) {
 
-    case 'clinical': return `
-      ${stats([
-        [activeResidents.length, 'Total Census'],
-        [urgents.length, 'Urgent Alerts'],
-        [withAlerts.length, 'Active Flags'],
-      ])}
-      ${section('⚠️ Urgent Clinical Alerts',
-        urgents.map(r =>
-          residentRow(r,
-            r.alerts.filter(a=>a.type==='urgent').map(a=>a.text).join(' · '),
-            'URGENT', 'urgent')
-        ).join('') || ''
-      )}
-      ${section('⚡ All Active Alerts',
-        withAlerts.map(r =>
-          residentRow(r,
-            r.alerts.map(a=>a.text).join(' · '),
-            r.alerts.some(a=>a.type==='urgent') ? 'Urgent' : 'Watch',
-            r.alerts.some(a=>a.type==='urgent') ? 'urgent' : 'warn')
-        ).join('') || ''
-      )}
-      ${section('🩺 Memory Care Residents',
-        memCare.map(r =>
-          residentRow(r, r.care + ' · ' + r.physician, 'Mem Care', 'info')
-        ).join('') || ''
-      )}
-      ${section('🏥 Skilled Nursing Residents',
-        skilled.map(r =>
-          residentRow(r, r.care + ' · ' + r.physician, 'Skilled', 'warn')
-        ).join('') || ''
-      )}`;
+    case 'clinical':
+      return stats([
+        [active.length,      'Census'],
+        [urgents.length,     'Urgent'],
+        [withAlerts.length,  'Flagged'],
+      ]) +
+      section('⚠️ Urgent Alerts',
+        urgents.length
+          ? urgents.map(function(r) {
+              var txt = r.alerts.filter(function(a){return a.type==='urgent';}).map(function(a){return a.text;}).join(' · ');
+              return residentRow(r, txt, 'URGENT', 'urgent');
+            }).join('')
+          : ''
+      ) +
+      section('⚡ All Active Alerts',
+        withAlerts.length
+          ? withAlerts.map(function(r) {
+              var txt = r.alerts.map(function(a){return a.text;}).join(' · ');
+              var isUrgent = r.alerts.some(function(a){return a.type==='urgent';});
+              return residentRow(r, txt, isUrgent?'Urgent':'Watch', isUrgent?'urgent':'warn');
+            }).join('')
+          : ''
+      ) +
+      section('🩺 Memory Care',
+        memCare.length
+          ? memCare.map(function(r){ return residentRow(r, r.care + ' · ' + (r.physician||'—'), 'Mem Care', 'info'); }).join('')
+          : ''
+      ) +
+      section('🏥 Skilled Nursing',
+        skilled.length
+          ? skilled.map(function(r){ return residentRow(r, r.care + ' · ' + (r.physician||'—'), 'Skilled', 'warn'); }).join('')
+          : ''
+      );
 
-    case 'dining': return `
-      ${stats([
-        [activeResidents.length, 'Residents'],
-        [3, 'Special Diets'],
-        [2, 'Tray Delivery'],
-      ])}
-      ${section('🚨 Allergy & Diet Alerts',
-        withAlerts.filter(r=>r.care==='Skilled Nursing' || r.care==='Memory Care').map(r=>
-          residentRow(r, 'Review diet profile before service', 'Review', 'warn')
-        ).join('') || ''
-      )}
-      ${section('🍽 All Residents — Diet Summary',
-        activeResidents.map(r =>
-          residentRow(r, r.care + ' · Physician: ' + r.physician, 'Regular', 'ok')
-        ).join('') || ''
-      )}`;
+    case 'dining':
+      var trayResidents = active.filter(function(r){
+        return r.deptData && r.deptData.dining && r.deptData.dining.trayDelivery;
+      });
+      var specialDiets = active.filter(function(r){
+        return r.deptData && r.deptData.dining && r.deptData.dining.dietType && r.deptData.dining.dietType !== 'Regular';
+      });
+      var allergyResidents = active.filter(function(r){
+        return r.deptData && r.deptData.dining && r.deptData.dining.allergies && r.deptData.dining.allergies.length;
+      });
+      return stats([
+        [active.length,        'Residents'],
+        [specialDiets.length,  'Special Diets'],
+        [trayResidents.length, 'Tray Delivery'],
+      ]) +
+      section('🚨 Allergy Alerts',
+        allergyResidents.length
+          ? allergyResidents.map(function(r){
+              var a = r.deptData.dining.allergies.join(', ');
+              return residentRow(r, 'Allergies: ' + a, 'Alert', 'urgent');
+            }).join('')
+          : ''
+      ) +
+      section('🍽 Resident Diet Summary',
+        active.map(function(r) {
+          var d = (r.deptData && r.deptData.dining) || {};
+          var diet = d.dietType || 'Regular';
+          var tex  = d.texture  || 'Regular';
+          var detail = diet + ' · ' + tex + (d.trayDelivery ? ' · Tray delivery' : '');
+          return residentRow(r, detail, diet === 'Regular' ? 'Regular' : 'Special', diet === 'Regular' ? 'ok' : 'warn');
+        }).join('')
+      );
 
-    case 'housekeeping': return `
-      ${stats([
-        [activeResidents.length, 'Rooms'],
-        [activeResidents.length, 'Pending'],
-        [0, 'Completed'],
-      ])}
-      ${section('🔴 Do Not Enter',
-        memCare.slice(0,1).map(r =>
-          residentRow(r, 'DNE until 10:00 AM — resident sleeping', 'DNE', 'urgent')
-        ).join('') || ''
-      )}
-      ${section('🧹 Room Service Schedule',
-        activeResidents.map((r,i) =>
-          residentRow(r, `Room ${r.room} · ${i < 3 ? 'Full clean' : 'Daily tidy'}`,
-            i < 3 ? 'Pending' : 'Pending', 'info')
-        ).join('') || ''
-      )}`;
+    case 'housekeeping':
+      return stats([
+        [active.length, 'Rooms'],
+        [active.length, 'Scheduled'],
+        [0,             'Completed'],
+      ]) +
+      section('🔴 Do Not Enter',
+        active.filter(function(r){
+          return r.deptData && r.deptData.housekeeping && r.deptData.housekeeping.dneUntil;
+        }).map(function(r){
+          return residentRow(r, 'DNE until ' + r.deptData.housekeeping.dneUntil, 'DNE', 'urgent');
+        }).join('') || ''
+      ) +
+      section('🧹 Room Schedule',
+        active.map(function(r) {
+          var d = (r.deptData && r.deptData.housekeeping) || {};
+          var svc = d.serviceType || 'Daily Tidy';
+          return residentRow(r, 'Room ' + r.room + ' · ' + svc, 'Pending', 'info');
+        }).join('')
+      );
 
-    case 'maintenance': return `
-      ${stats([
-        [3, 'Open Orders'],
-        [1, 'Urgent'],
-        [2, 'In Progress'],
-      ])}
-      ${section('🔴 Urgent / Safety Work Orders',
-        [R[3]].map(r =>
-          residentRow(r, `Room ${r.room} · Call light not working — safety issue`, 'URGENT', 'urgent')
-        ).join('') || ''
-      )}
-      ${section('🔧 Open Work Orders',
-        [R[0], R[2], R[4]].map((r,i) =>
-          residentRow(r,
-            [`Room ${r.room} · HVAC thermostat unresponsive`,
-             `Room ${r.room} · Bathroom faucet dripping`,
-             `Room ${r.room} · Window latch loose`][i],
-            ['In Progress','Open','Open'][i],
-            ['warn','info','info'][i])
-        ).join('') || ''
-      )}`;
+    case 'maintenance':
+      var orders = active.filter(function(r){
+        return r.deptData && r.deptData.maintenance && r.deptData.maintenance.description;
+      });
+      var urgentOrders = orders.filter(function(r){ return r.deptData.maintenance.safetyFlag; });
+      var openOrders   = orders.filter(function(r){ return r.deptData.maintenance.status !== 'Completed'; });
+      return stats([
+        [openOrders.length,   'Open Orders'],
+        [urgentOrders.length, 'Urgent'],
+        [orders.length,       'Total'],
+      ]) +
+      section('🔴 Safety / Urgent',
+        urgentOrders.length
+          ? urgentOrders.map(function(r){
+              var d = r.deptData.maintenance;
+              return residentRow(r, 'Room ' + r.room + ' · ' + (d.issueType||'') + ' · ' + (d.description||'').substring(0,60), 'URGENT', 'urgent');
+            }).join('')
+          : ''
+      ) +
+      section('🔧 Open Work Orders',
+        openOrders.length
+          ? openOrders.map(function(r){
+              var d = r.deptData.maintenance;
+              var status = d.status || 'Open';
+              return residentRow(r, 'Room ' + r.room + ' · ' + (d.issueType||'') + ' · ' + (d.description||'').substring(0,50),
+                status, status==='Urgent'?'warn':'info');
+            }).join('')
+          : ''
+      );
 
-    case 'concierge': return `
-      ${stats([
-        [5, 'Family Visits'],
-        [3, 'Transport Needed'],
-        [activeResidents.length, 'Residents'],
-      ])}
-      ${section('🚗 Transportation Requests',
-        [R[0],R[2],R[4]].map((r,i) =>
-          residentRow(r,
-            ['Dr. Patel appt — 2:00 PM · Wheelchair needed',
-             'Hair salon — 11:00 AM',
-             'Eye exam — 9:30 AM · Family driving'][i],
-            'Transport', 'info')
-        ).join('') || ''
-      )}
-      ${section('👨‍👩‍👧 Family Visit Log',
-        [R[0],R[1],R[3],R[6]].map((r,i) =>
-          residentRow(r,
-            ['Daughter visited · 2 hrs · Good mood',
-             'Son called — checked in by phone',
-             'Wife + son visited · 3 hrs',
-             'Niece visited · 1 hr · Brought flowers'][i],
-            'Logged', 'ok')
-        ).join('') || ''
-      )}`;
+    case 'concierge':
+      var hasTransport = active.filter(function(r){
+        return r.deptData && r.deptData.concierge && r.deptData.concierge.transportNeeds;
+      });
+      var hasVisit = active.filter(function(r){
+        return r.deptData && r.deptData.concierge && r.deptData.concierge.visitorName;
+      });
+      return stats([
+        [active.length,        'Residents'],
+        [hasTransport.length,  'Transport'],
+        [hasVisit.length,      'Visits'],
+      ]) +
+      section('🚗 Transport Requests',
+        hasTransport.length
+          ? hasTransport.map(function(r){
+              return residentRow(r, r.deptData.concierge.transportNeeds.substring(0,80), 'Transport', 'info');
+            }).join('')
+          : ''
+      ) +
+      section('👨‍👩‍👧 Recent Family Visits',
+        hasVisit.length
+          ? hasVisit.map(function(r){
+              var d = r.deptData.concierge;
+              return residentRow(r, (d.visitorName||'') + (d.visitDate ? ' · ' + d.visitDate : ''), 'Logged', 'ok');
+            }).join('')
+          : ''
+      ) +
+      section('📋 All Residents',
+        active.map(function(r){
+          var d = (r.deptData && r.deptData.concierge) || {};
+          return residentRow(r, d.interests || 'No preferences on file', '', '');
+        }).join('')
+      );
 
-    case 'activities': return `
-      ${stats([
-        [6, 'Programs Today'],
-        [activeResidents.length, 'Residents'],
-        [5, 'Participated'],
-      ])}
-      ${section('📅 Today\'s Programs',
-        [
-          ['9:00 AM', 'Morning Stretch', '6 attended'],
-          ['10:30 AM', 'Bingo', '8 attended'],
-          ['2:00 PM', 'Art Class', '4 attended'],
-          ['3:30 PM', 'Music Hour', '7 attended'],
-          ['4:30 PM', 'Happy Hour Social', '10 attended'],
-          ['7:00 PM', 'Movie Night', 'Upcoming'],
-        ].map(([time, prog, note]) => `
-          <div class="report-row">
-            <div class="rr-avatar" style="font-size:10px;font-weight:700;">${time.replace(' ','<br>')}</div>
-            <div class="rr-info">
-              <div class="rr-name">${prog}</div>
-              <div class="rr-detail">${note}</div>
-            </div>
-            <div class="rr-badge ${note==='Upcoming'?'info':'ok'}">${note==='Upcoming'?'Soon':'Done'}</div>
-          </div>`).join('')
-      )}
-      ${section('⭐ Resident Engagement',
-        activeResidents.map((r,i) =>
-          residentRow(r,
-            ['Attended 3 of 5 programs · High engagement',
-             'Music only · Declined group activities',
-             'Attended all morning programs',
-             'Bed rest today — 1-on-1 visit done',
-             'Bingo + Social · Good spirits',
-             'Art class · Excellent engagement',
-             'Attended all 5 programs · Star participant',
-             'Missed AM · Attended PM social'][i] || 'No activity recorded',
-            ['Active','Low','Active','1-on-1','Active','Active','Active','Partial'][i] || 'N/A',
-            ['ok','warn','ok','info','ok','ok','ok','info'][i] || 'info')
-        ).join('') || ''
-      )}`;
+    case 'activities':
+      var participated = active.filter(function(r){
+        return r.deptData && r.deptData.activities && r.deptData.activities.lastProgram;
+      });
+      return stats([
+        [active.length,        'Residents'],
+        [participated.length,  'Logged Today'],
+        [active.length - participated.length, 'Not Logged'],
+      ]) +
+      section('⭐ Participation Log',
+        participated.length
+          ? participated.map(function(r){
+              var d = r.deptData.activities;
+              var eng = d.engagementLevel || '';
+              return residentRow(r, (d.lastProgram||'') + (d.attended ? ' · Attended' : ' · Did not attend'), eng||'Logged', 'ok');
+            }).join('')
+          : ''
+      ) +
+      section('📋 Not Yet Logged',
+        active.filter(function(r){
+          return !r.deptData || !r.deptData.activities || !r.deptData.activities.lastProgram;
+        }).map(function(r){
+          var d = (r.deptData && r.deptData.activities) || {};
+          var pref = d.preferredCategories || 'No preferences on file';
+          return residentRow(r, typeof pref === 'object' ? pref.join(', ') : pref, 'Pending', 'warn');
+        }).join('')
+      );
 
-    case 'laundry': return `
-      ${stats([
-        [activeResidents.length, 'Residents'],
-        [5, 'Pickups Today'],
-        [0, 'Missing Items'],
-      ])}
-      ${section('📋 Laundry Status',
-        activeResidents.map((r,i) =>
-          residentRow(r,
-            [`Room ${r.room} · ` + ['Picked up · In wash','Returned · Complete','Scheduled pickup PM','Returned · Complete','Picked up · Drying','Scheduled pickup AM','Returned · Complete','No pickup today'][i],
-            ][0],
-            ['In Wash','Done','Pending','Done','Drying','Pending','Done','—'][i],
-            ['info','ok','warn','ok','info','warn','ok','info'][i])
-        ).join('') || ''
-      )}`;
+    case 'laundry':
+      var pickups = active.filter(function(r){
+        return r.deptData && r.deptData.laundry && r.deptData.laundry.status;
+      });
+      var missing = active.filter(function(r){
+        return r.deptData && r.deptData.laundry && r.deptData.laundry.flagMissing;
+      });
+      return stats([
+        [active.length,   'Residents'],
+        [pickups.length,  'Logged'],
+        [missing.length,  'Missing Items'],
+      ]) +
+      section('🏷 Missing Item Flags',
+        missing.length
+          ? missing.map(function(r){
+              var d = r.deptData.laundry;
+              return residentRow(r, (d.itemDescription||'Item') + ' · Label: ' + (d.labelCode||'—'), 'MISSING', 'urgent');
+            }).join('')
+          : ''
+      ) +
+      section('👕 Laundry Status',
+        active.map(function(r) {
+          var d = (r.deptData && r.deptData.laundry) || {};
+          var status = d.status || 'Not scheduled';
+          var statusType = status==='Returned'||status==='Done' ? 'ok' : status==='In Wash'||status==='Drying' ? 'info' : 'warn';
+          return residentRow(r, 'Room ' + r.room + ' · ' + status, status||'—', statusType);
+        }).join('')
+      );
 
-    case 'sales': return `
-      ${stats([
-        [activeResidents.length, 'Occupied'],
-        [2, 'Prospects'],
-        [1, 'Tours Today'],
-      ])}
-      ${section('📈 Occupancy Snapshot',
-        [
-          ['Total Units', '24'],
-          ['Occupied', String(activeResidents.length)],
-          ['Available', String(24 - activeResidents.length)],
-          ['Occupancy Rate', Math.round(activeResidents.length/24*100)+'%'],
-        ].map(([label, val]) => `
-          <div class="report-row">
-            <div class="rr-info"><div class="rr-name">${label}</div></div>
-            <div class="rr-badge info">${val}</div>
-          </div>`).join('')
-      )}
-      ${section('🗓 Tours & Prospects',
-        [
-          ['Smith Family', 'In-person tour · 2:00 PM', 'Today'],
-          ['Johnson, M.', 'Phone inquiry · Follow-up needed', 'Pending'],
-        ].map(([name, detail, badge]) => `
-          <div class="report-row">
-            <div class="rr-avatar">${name[0]}</div>
-            <div class="rr-info">
-              <div class="rr-name">${name}</div>
-              <div class="rr-detail">${detail}</div>
-            </div>
-            <div class="rr-badge info">${badge}</div>
-          </div>`).join('')
-      )}
-      ${section('📋 Recent Move-Ins / Move-Outs',
-        [R[0], R[4]].map((r,i) =>
-          residentRow(r,
-            [r.first+' '+r.last+' · Move-in 3/28 · Assisted Living',
-             r.first+' '+r.last+' · Move-in 3/15 · Independent'][i],
-            'Move-In', 'ok')
-        ).join('') || ''
-      )}`;
+    case 'sales':
+      var moveIns  = active.filter(function(r){ return r.deptData && r.deptData.sales && r.deptData.sales.moveInDate; });
+      var occupied = active.length;
+      var total    = Math.max(occupied, 24);
+      var rate     = Math.round(occupied / total * 100);
+      return stats([
+        [occupied,      'Occupied'],
+        [total-occupied,'Available'],
+        [rate + '%',    'Occupancy'],
+      ]) +
+      section('📈 Occupancy',
+        '<div class="report-row"><div class="rr-info"><div class="rr-name">Total Units</div></div><div class="rr-badge info">' + total + '</div></div>' +
+        '<div class="report-row"><div class="rr-info"><div class="rr-name">Occupied</div></div><div class="rr-badge ok">' + occupied + '</div></div>' +
+        '<div class="report-row"><div class="rr-info"><div class="rr-name">Available</div></div><div class="rr-badge info">' + (total-occupied) + '</div></div>' +
+        '<div class="report-row"><div class="rr-info"><div class="rr-name">Occupancy Rate</div></div><div class="rr-badge ' + (rate>=90?'ok':rate>=75?'warn':'urgent') + '">' + rate + '%</div></div>'
+      ) +
+      section('📋 Move-In Records',
+        moveIns.length
+          ? moveIns.map(function(r){
+              var d = r.deptData.sales;
+              return residentRow(r, 'Move-in: ' + (d.moveInDate||'—') + ' · ' + r.care + ' · ' + (d.referralSource||'—'), 'Move-In', 'ok');
+            }).join('')
+          : ''
+      ) +
+      section('🏠 Current Residents',
+        active.map(function(r){
+          return residentRow(r, 'Room ' + r.room + ' · ' + r.care, 'Active', 'ok');
+        }).join('')
+      );
 
-    case 'admin': return `
-      ${stats([
-        [activeResidents.length, 'Census'],
-        [urgents.length, 'Open Flags'],
-        [1, 'Compliance Due'],
-      ])}
-      ${section('🔴 Active Clinical Alerts (All Depts)',
-        urgents.map(r =>
-          residentRow(r,
-            r.alerts.filter(a=>a.type==='urgent').map(a=>a.text).join(' · '),
-            'Urgent', 'urgent')
-        ).join('') || ''
-      )}
-      ${section('🛡 Compliance Items Due',
-        [
-          ['Annual Care Plan Reviews', '3 due this week', 'Due Soon'],
-          ['Resident Rights Acknowledgment', '1 missing signature', 'Missing'],
-          ['Fire Drill Documentation', 'Completed March 2025', 'OK'],
-        ].map(([title, detail, badge]) => `
-          <div class="report-row">
-            <div class="rr-info">
-              <div class="rr-name">${title}</div>
-              <div class="rr-detail">${detail}</div>
-            </div>
-            <div class="rr-badge ${badge==='OK'?'ok':badge==='Missing'?'urgent':'warn'}">${badge}</div>
-          </div>`).join('')
-      )}
-      ${section('💳 Billing Snapshot',
-        activeResidents.slice(0,4).map((r,i) =>
-          residentRow(r,
-            ['Private Pay · Current','LTC Insurance · Pending claim','Private Pay · Current','VA Benefits · Current'][i],
-            ['Current','Pending','Current','Current'][i],
-            ['ok','warn','ok','ok'][i])
-        ).join('') || ''
-      )}
-      ${section('📊 Full Census',
-        activeResidents.map(r =>
-          residentRow(r, `Room ${r.room} · ${r.care} · ${r.physician}`, 'Active', 'ok')
-        ).join('') || ''
-      )}`;
+    case 'admin':
+      return stats([
+        [active.length,   'Census'],
+        [urgents.length,  'Alerts'],
+        [withAlerts.length,'Flagged'],
+      ]) +
+      section('🔴 Urgent Alerts — All Departments',
+        urgents.length
+          ? urgents.map(function(r){
+              var txt = r.alerts.filter(function(a){return a.type==='urgent';}).map(function(a){return a.text;}).join(' · ');
+              return residentRow(r, txt, 'Urgent', 'urgent');
+            }).join('')
+          : ''
+      ) +
+      section('💳 Billing Overview',
+        active.map(function(r){
+          var d = (r.deptData && r.deptData.admin) || {};
+          var pay = d.paymentSource || 'Not on file';
+          var rate = d.monthlyRate ? '$' + Number(d.monthlyRate).toLocaleString() + '/mo' : 'Rate not set';
+          return residentRow(r, pay + ' · ' + rate, d.paymentSource?'On File':'Pending', d.paymentSource?'ok':'warn');
+        }).join('')
+      ) +
+      section('📊 Full Census',
+        active.map(function(r){
+          return residentRow(r, 'Room ' + r.room + ' · ' + r.care + ' · ' + (r.physician||'—'), 'Active', 'ok');
+        }).join('')
+      );
 
-    default: return `<div class="report-empty">No report configured for this department.</div>`;
+    default:
+      return emptyState('No report configured for this department.');
   }
 }
 </script>
