@@ -718,6 +718,115 @@ flex: 0 0 calc(16.6% - 6px);
 flex: 1;
 font-size: 11px;
 }
+/* Mood/behavior emoji scale */
+#mood-scale .scale-btn {
+font-size: 22px;
+flex: 1;
+height: 50px;
+}
+#mood-scale .scale-btn.selected {
+background: #fb7185;
+border-color: #fb7185;
+color: #0e1117;
+}
+/* ADL 3-state grid */
+.adl-grid {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.adl-row {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.adl-label {
+font-size: 13px;
+color: var(–text);
+font-weight: 600;
+width: 90px;
+flex-shrink: 0;
+}
+.adl-btn-group {
+display: flex;
+flex: 1;
+gap: 4px;
+}
+.adl-btn {
+flex: 1;
+height: 36px;
+border-radius: 7px;
+border: 2px solid var(–border2);
+background: var(–surface2);
+color: var(–muted);
+font-size: 11px;
+font-weight: 700;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+-webkit-user-select: none;
+user-select: none;
+transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.adl-btn.indep { }
+.adl-btn.assist { }
+.adl-btn.total { }
+.adl-btn.selected-indep { background: #4ade80; border-color: #4ade80; color: #0e1117; }
+.adl-btn.selected-assist { background: #f59e2a; border-color: #f59e2a; color: #0e1117; }
+.adl-btn.selected-total  { background: #fb7185; border-color: #fb7185; color: #0e1117; }
+/* NTR button on resident card */
+.ntr-btn {
+font-size: 10px;
+font-weight: 700;
+color: var(–muted);
+border: 1.5px solid var(–border2);
+background: var(–surface2);
+border-radius: 6px;
+padding: 4px 8px;
+cursor: pointer;
+flex-shrink: 0;
+-webkit-user-select: none;
+user-select: none;
+white-space: nowrap;
+}
+.ntr-btn.ntr-done {
+background: #4ade80;
+border-color: #4ade80;
+color: #0e1117;
+}
+/* Shift note template chips */
+.template-chips {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+margin-bottom: 10px;
+}
+.tmpl-chip {
+background: var(–surface2);
+border: 1.5px solid var(–border2);
+border-radius: 20px;
+padding: 5px 12px;
+font-size: 12px;
+color: var(–muted);
+cursor: pointer;
+-webkit-user-select: none;
+user-select: none;
+transition: background 0.12s, color 0.12s;
+}
+.tmpl-chip:active {
+background: var(–border2);
+color: var(–text);
+}
+.note-section-label {
+font-size: 11px;
+font-weight: 700;
+color: var(–muted);
+text-transform: uppercase;
+letter-spacing: 0.05em;
+margin-bottom: 6px;
+}
+
 background: var(–surface);
 border-top: 1px solid var(–border);
 padding: 12px 16px;
@@ -1429,11 +1538,104 @@ html, body { height: auto !important; overflow: auto !important; }
 
   <div class="form-section">
     <div class="form-section-header">
-      <span class="form-section-icon">📝</span>
-      <span class="form-section-title">Clinical Notes</span>
+      <span class="form-section-icon">🙂</span>
+      <span class="form-section-title">Mood &amp; Behavior</span>
     </div>
     <div class="form-section-body">
-      <div class="form-field"><textarea id="clin-notes" placeholder="General clinical observations for this shift…" style="min-height:100px"></textarea></div>
+      <div class="form-field">
+        <label>Current Mood</label>
+        <div class="scale-wrap" id="mood-scale">
+          <div class="scale-btn" onclick="selectScale('mood-scale',this)" title="Distressed">😟</div>
+          <div class="scale-btn" onclick="selectScale('mood-scale',this)" title="Anxious">😕</div>
+          <div class="scale-btn" onclick="selectScale('mood-scale',this)" title="Neutral">😐</div>
+          <div class="scale-btn" onclick="selectScale('mood-scale',this)" title="Pleasant">🙂</div>
+          <div class="scale-btn" onclick="selectScale('mood-scale',this)" title="Engaged">😄</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">🤲</span>
+      <span class="form-section-title">ADL Assistance</span>
+    </div>
+    <div class="form-section-body">
+      <div class="adl-grid" id="adl-grid">
+        <div class="adl-row">
+          <div class="adl-label">Bathing</div>
+          <div class="adl-btn-group">
+            <div class="adl-btn indep" onclick="selectAdl(this,'adl-bathing','I')" data-adl="adl-bathing" data-val="I">Indep</div>
+            <div class="adl-btn assist" onclick="selectAdl(this,'adl-bathing','A')" data-adl="adl-bathing" data-val="A">Assist</div>
+            <div class="adl-btn total" onclick="selectAdl(this,'adl-bathing','T')" data-adl="adl-bathing" data-val="T">Total</div>
+          </div>
+        </div>
+        <div class="adl-row">
+          <div class="adl-label">Dressing</div>
+          <div class="adl-btn-group">
+            <div class="adl-btn indep" onclick="selectAdl(this,'adl-dressing','I')" data-adl="adl-dressing" data-val="I">Indep</div>
+            <div class="adl-btn assist" onclick="selectAdl(this,'adl-dressing','A')" data-adl="adl-dressing" data-val="A">Assist</div>
+            <div class="adl-btn total" onclick="selectAdl(this,'adl-dressing','T')" data-adl="adl-dressing" data-val="T">Total</div>
+          </div>
+        </div>
+        <div class="adl-row">
+          <div class="adl-label">Grooming</div>
+          <div class="adl-btn-group">
+            <div class="adl-btn indep" onclick="selectAdl(this,'adl-grooming','I')" data-adl="adl-grooming" data-val="I">Indep</div>
+            <div class="adl-btn assist" onclick="selectAdl(this,'adl-grooming','A')" data-adl="adl-grooming" data-val="A">Assist</div>
+            <div class="adl-btn total" onclick="selectAdl(this,'adl-grooming','T')" data-adl="adl-grooming" data-val="T">Total</div>
+          </div>
+        </div>
+        <div class="adl-row">
+          <div class="adl-label">Toileting</div>
+          <div class="adl-btn-group">
+            <div class="adl-btn indep" onclick="selectAdl(this,'adl-toileting','I')" data-adl="adl-toileting" data-val="I">Indep</div>
+            <div class="adl-btn assist" onclick="selectAdl(this,'adl-toileting','A')" data-adl="adl-toileting" data-val="A">Assist</div>
+            <div class="adl-btn total" onclick="selectAdl(this,'adl-toileting','T')" data-adl="adl-toileting" data-val="T">Total</div>
+          </div>
+        </div>
+        <div class="adl-row">
+          <div class="adl-label">Ambulation</div>
+          <div class="adl-btn-group">
+            <div class="adl-btn indep" onclick="selectAdl(this,'adl-ambulation','I')" data-adl="adl-ambulation" data-val="I">Indep</div>
+            <div class="adl-btn assist" onclick="selectAdl(this,'adl-ambulation','A')" data-adl="adl-ambulation" data-val="A">Assist</div>
+            <div class="adl-btn total" onclick="selectAdl(this,'adl-ambulation','T')" data-adl="adl-ambulation" data-val="T">Total</div>
+          </div>
+        </div>
+        <div class="adl-row">
+          <div class="adl-label">Transfers</div>
+          <div class="adl-btn-group">
+            <div class="adl-btn indep" onclick="selectAdl(this,'adl-transfers','I')" data-adl="adl-transfers" data-val="I">Indep</div>
+            <div class="adl-btn assist" onclick="selectAdl(this,'adl-transfers','A')" data-adl="adl-transfers" data-val="A">Assist</div>
+            <div class="adl-btn total" onclick="selectAdl(this,'adl-transfers','T')" data-adl="adl-transfers" data-val="T">Total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-header">
+      <span class="form-section-icon">📝</span>
+      <span class="form-section-title">Shift Notes</span>
+    </div>
+    <div class="form-section-body">
+      <div class="note-section-label">Quick templates — tap to insert</div>
+      <div class="template-chips">
+        <div class="tmpl-chip" onclick="insertTemplate('Alert and oriented x3 at start of shift.')">Alert &amp; oriented</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Resident refused care. Approach reattempted — accepted on second attempt.')">Refused care</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Appetite good at all meals. Fluids encouraged throughout shift.')">Good appetite</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Appetite poor. Encouraged but declined most of meal.')">Poor appetite</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Resident resting comfortably. No distress noted.')">Resting comfortably</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Verbally agitated at times. Redirected successfully.')">Agitated — redirected</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Family visited during shift. Resident appeared pleased.')">Family visit</div>
+        <div class="tmpl-chip" onclick="insertTemplate('No complaints voiced. No acute changes noted this shift.')">No acute changes</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Incontinent x1 this shift. Peri care provided. Skin intact.')">Incontinent</div>
+        <div class="tmpl-chip" onclick="insertTemplate('Slept most of shift. Roused for care and medications without difficulty.')">Slept most of shift</div>
+      </div>
+      <div class="form-field">
+        <textarea id="clin-notes" placeholder="Tap a template above, or type your own observations…" style="min-height:90px"></textarea>
+      </div>
     </div>
   </div>
 </div>
@@ -2559,6 +2761,12 @@ function renderResidentList(list) {
     var editBtn = isAdmin
       ? '<button class="btn-icon" onclick="event.stopPropagation();openEditResident(\'' + r.id + '\')" style="font-size:14px;width:32px;height:32px;flex-shrink:0;" title="Edit">✎</button>'
       : '';
+    var dept = currentUser ? currentUser.dept : '';
+    var showNtr = (dept === 'clinical' || dept === 'admin');
+    var ntrDone = (r.ntrToday === getTodayStr());
+    var ntrBtn = showNtr
+      ? '<button class="ntr-btn' + (ntrDone ? ' ntr-done' : '') + '" onclick="event.stopPropagation();logNTR(\\'' + r.id + '\\')">' + (ntrDone ? '\u2713 NTR' : 'NTR') + '</button>'
+      : '';
     return '<div class="resident-card" onclick="openResident(\'' + r.id + '\')">' +
       '<div class="resident-avatar">' + initials + '</div>' +
       '<div class="resident-info">' +
@@ -2566,8 +2774,9 @@ function renderResidentList(list) {
         '<div class="resident-meta">Room ' + (r.room||'—') + ' · ' + (r.care||'') + '</div>' +
       '</div>' +
       '<div class="resident-alerts">' + alertDots + '</div>' +
+      ntrBtn +
       editBtn +
-      '<div class="resident-arrow">›</div>' +
+      '<div class="resident-arrow">\u203a</div>' +
     '</div>';
   }).join('');
 }
@@ -2746,6 +2955,13 @@ function collectDeptData() {
       incidentDesc:      getVal('clin-incident-desc'),
       familyNotified:    getToggle('clin-family-notified'),
       physicianNotified: getToggle('clin-physician-notified'),
+      moodLevel:         getScaleVal('mood-scale'),
+      adlBathing:        getAdlVal('adl-bathing'),
+      adlDressing:       getAdlVal('adl-dressing'),
+      adlGrooming:       getAdlVal('adl-grooming'),
+      adlToileting:      getAdlVal('adl-toileting'),
+      adlAmbulation:     getAdlVal('adl-ambulation'),
+      adlTransfers:      getAdlVal('adl-transfers'),
       notes:             getVal('clin-notes'),
     };
   }
@@ -2887,6 +3103,13 @@ function loadDeptData(r) {
   setToggle('clin-family-notified', c.familyNotified);
   setToggle('clin-physician-notified', c.physicianNotified);
   setVal('clin-notes', c.notes);
+  setScaleVal('mood-scale', c.moodLevel);
+  setAdlVal('adl-bathing', c.adlBathing);
+  setAdlVal('adl-dressing', c.adlDressing);
+  setAdlVal('adl-grooming', c.adlGrooming);
+  setAdlVal('adl-toileting', c.adlToileting);
+  setAdlVal('adl-ambulation', c.adlAmbulation);
+  setAdlVal('adl-transfers', c.adlTransfers);
 
   // Dining
   var dn = d.dining || {};
@@ -3167,6 +3390,74 @@ function selectScale(groupId, el) {
   }
   el.classList.add('selected');
   return false;
+}
+
+/* ─── NTR — No Issues This Shift ─── */
+function getTodayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+
+function logNTR(residentId) {
+  var r = null;
+  for (var i = 0; i < allResidents.length; i++) {
+    if (allResidents[i].id === residentId) { r = allResidents[i]; break; }
+  }
+  if (!r) return;
+  var staffName = currentUser ? currentUser.name : 'Staff';
+  var now = new Date();
+  var timeStr = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  r.ntrToday = getTodayStr();
+  // Log NTR as a clinical note entry
+  if (!r.deptData) r.deptData = {};
+  if (!r.deptData.clinical) r.deptData.clinical = {};
+  r.deptData.clinical.notes = (r.deptData.clinical.notes ? r.deptData.clinical.notes + '\n' : '') +
+    '[NTR ' + timeStr + ' — ' + staffName + '] Routine shift. No concerns noted. All ADLs completed. No behavioral or clinical changes observed.';
+  saveToCloud();
+  renderResidentList(allResidents);
+  showToast(r.first + ' ' + r.last + ' — NTR logged', 'ok');
+}
+
+/* ─── ADL 3-State Grid ─── */
+function selectAdl(el, adlKey, val) {
+  var group = el.parentElement;
+  var btns = group.querySelectorAll('.adl-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('selected-indep','selected-assist','selected-total');
+  }
+  if (val === 'I') el.classList.add('selected-indep');
+  else if (val === 'A') el.classList.add('selected-assist');
+  else if (val === 'T') el.classList.add('selected-total');
+}
+
+function getAdlVal(adlKey) {
+  var btns = document.querySelectorAll('[data-adl="' + adlKey + '"]');
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].classList.contains('selected-indep')) return 'I';
+    if (btns[i].classList.contains('selected-assist')) return 'A';
+    if (btns[i].classList.contains('selected-total')) return 'T';
+  }
+  return '';
+}
+
+function setAdlVal(adlKey, val) {
+  if (!val) return;
+  var btns = document.querySelectorAll('[data-adl="' + adlKey + '"]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('selected-indep','selected-assist','selected-total');
+    if (val === 'I' && btns[i].getAttribute('data-val') === 'I') btns[i].classList.add('selected-indep');
+    if (val === 'A' && btns[i].getAttribute('data-val') === 'A') btns[i].classList.add('selected-assist');
+    if (val === 'T' && btns[i].getAttribute('data-val') === 'T') btns[i].classList.add('selected-total');
+  }
+}
+
+/* ─── Shift Note Templates ─── */
+function insertTemplate(text) {
+  var ta = document.getElementById('clin-notes');
+  if (!ta) return;
+  var cur = ta.value;
+  ta.value = cur ? cur + ' ' + text : text;
+  ta.focus();
 }
 
 /* ═══════════════════════════════════════════════════════
