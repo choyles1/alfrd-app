@@ -2321,7 +2321,7 @@ html, body { height: auto !important; overflow: auto !important; }
 
 // Global error surface
 window.onerror = function(msg, src, line) {
-  const errEl = document.getElementById('login-error');
+  var errEl = document.getElementById('login-error');
   if (errEl) { errEl.textContent = 'Error (line ' + line + '): ' + msg; errEl.classList.add('show'); }
   return false;
 };
@@ -2330,7 +2330,7 @@ window.onunhandledrejection = function(e) {
 };
 
 /* ─── DEPARTMENT CONFIG ─── */
-const DEPT_CONFIG = {
+var DEPT_CONFIG = {
   clinical:     { label: 'Clinical',      icon: '🩺', color: '#fb7185', glow: 'rgba(251,113,133,0.15)' },
   dining:       { label: 'Dining',        icon: '🍽', color: '#fb923c', glow: 'rgba(251,146,60,0.15)'  },
   housekeeping: { label: 'Housekeeping',  icon: '🧹', color: '#a3e635', glow: 'rgba(163,230,53,0.15)'  },
@@ -2342,7 +2342,7 @@ const DEPT_CONFIG = {
   admin:        { label: 'Admin',         icon: '🏛', color: '#818cf8', glow: 'rgba(129,140,248,0.15)' },
 };
 
-const ROLE_TABS = {
+var ROLE_TABS = {
   clinical:     ['core','clinical'],
   dining:       ['core','dining'],
   housekeeping: ['core','housekeeping'],
@@ -2355,7 +2355,7 @@ const ROLE_TABS = {
 };
 
 /* ─── SEED DATA ─── */
-const SEED_RESIDENTS = [
+var SEED_RESIDENTS = [
   { id:'r1', first:'Eleanor',  last:'Whitmore',  room:'101A', care:'Assisted Living', dob:'1938-03-12', physician:'Dr. Patel',    alerts:[{type:'urgent',text:'Fall risk — high'}],   notes:'Prefers morning routines. Family visits Sundays.', deptData:{} },
   { id:'r2', first:'Harold',   last:'Beaumont',  room:'102',  care:'Memory Care',     dob:'1932-07-28', physician:'Dr. Chen',     alerts:[{type:'warn',text:'Wandering risk'}],         notes:'Responds well to music therapy.', deptData:{} },
   { id:'r3', first:'Margaret', last:'Sullivan',  room:'205B', care:'Independent',     dob:'1945-11-04', physician:'Dr. Torres',   alerts:[],                                            notes:'Very independent. Prefers minimal assistance.', deptData:{} },
@@ -2368,21 +2368,21 @@ const SEED_RESIDENTS = [
 
 // Default admin account (PIN: 1234) — hashed with simple SHA-256 substitute
 // Real PIN stored as hash; for demo we compare directly then hash on save
-const SEED_USERS = [
+var SEED_USERS = [
   { id:'u1', name:'Admin', dept:'admin', role:'admin', pinHash: 'hash:1234', active:true, createdAt: new Date().toISOString() },
 ];
 
 /* ─── STATE ─── */
-let currentUser    = null;
-let currentResident= null;
-let activeTab      = 'core';
-let allResidents   = [];
-let allUsers       = [];
-let editingUserId  = null;
-let syncInterval   = null;
+var currentUser    = null;
+var currentResident= null;
+var activeTab      = 'core';
+var allResidents   = [];
+var allUsers       = [];
+var editingUserId  = null;
+var syncInterval   = null;
 
 // Cloud config stored in localStorage
-let cloudConfig = {
+var cloudConfig = {
   apiKey:       localStorage.getItem('alfrd_apiKey')    || '',
   residentsBin: localStorage.getItem('alfrd_resBin')   || '',
   usersBin:     localStorage.getItem('alfrd_usersBin') || '',
@@ -2391,8 +2391,8 @@ let cloudConfig = {
 /* ═══════════════════════════════════════════════════════
    CLOUD SYNC — JSONBin
 ═══════════════════════════════════════════════════════ */
-const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
-const isCloudReady = function() {
+var JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+var isCloudReady = function() {
   return cloudConfig.apiKey && cloudConfig.residentsBin && cloudConfig.usersBin;
 };
 
@@ -2405,113 +2405,114 @@ function setSyncStatus(state, msg) {
   });
 }
 
-async function binFetch(binId, method='GET', data=null) {
-  const opts = {
-    method,
+function binFetch(binId, method, data) {
+  method = method || 'GET';
+  data = data || null;
+  var opts = {
+    method: method,
     headers: {
       'X-Master-Key': cloudConfig.apiKey,
       'Content-Type': 'application/json',
-      'X-Bin-Versioning': 'false',
+      'X-Bin-Versioning': 'false'
     }
   };
   if (data) opts.body = JSON.stringify(data);
-  const url = method === 'POST'
-    ? `${JSONBIN_BASE}/b`
-    : `${JSONBIN_BASE}/b/${binId}${method==='GET' ? '/latest' : ''}`;
-  const res = await fetch(url, opts);
-  if (!res.ok) throw new Error(`JSONBin ${res.status}`);
-  return res.json();
+  var url = method === 'POST'
+    ? (JSONBIN_BASE + '/b')
+    : (JSONBIN_BASE + '/b/' + binId + (method === 'GET' ? '/latest' : ''));
+  return fetch(url, opts).then(function(res) {
+    if (!res.ok) throw new Error('JSONBin ' + res.status);
+    return res.json();
+  });
 }
 
-async function createBin(name, data) {
-  const opts = {
+function createBin(name, data) {
+  var opts = {
     method: 'POST',
     headers: {
       'X-Master-Key': cloudConfig.apiKey,
       'Content-Type': 'application/json',
       'X-Bin-Name': name,
-      'X-Bin-Private': 'true',
+      'X-Bin-Private': 'true'
     },
     body: JSON.stringify(data)
   };
-  const res = await fetch(`${JSONBIN_BASE}/b`, opts);
-  if (!res.ok) throw new Error(`Create bin failed: ${res.status}`);
-  const json = await res.json();
-  return json.metadata.id;
+  return fetch(JSONBIN_BASE + '/b', opts).then(function(res) {
+    if (!res.ok) throw new Error('Create bin failed: ' + res.status);
+    return res.json();
+  }).then(function(json) {
+    return json.metadata.id;
+  });
 }
 
-async function pullCloud() {
-  if (!isCloudReady()) return;
+function pullCloud() {
+  if (!isCloudReady()) return Promise.resolve(false);
   setSyncStatus('syncing', 'Syncing…');
-  try {
-    const [rRes, uRes] = await Promise.all([
-      binFetch(cloudConfig.residentsBin),
-      binFetch(cloudConfig.usersBin),
-    ]);
+  var rPromise = binFetch(cloudConfig.residentsBin);
+  var uPromise = binFetch(cloudConfig.usersBin);
+  return Promise.all([rPromise, uPromise]).then(function(results) {
+    var rRes = results[0];
+    var uRes = results[1];
     allResidents = rRes.record.residents || [];
     allUsers     = uRes.record.users     || [];
     saveLocal();
-    setSyncStatus('ok', `Synced ${fmtTime()}`);
+    setSyncStatus('ok', 'Synced ' + fmtTime());
     renderResidentList(allResidents);
     return true;
-  } catch(e) {
+  }).catch(function(e) {
     setSyncStatus('error', 'Sync failed');
     console.warn('Pull error:', e);
     return false;
-  }
+  });
 }
 
-async function pushCloud() {
+function pushCloud() {
   if (!isCloudReady()) return;
   setSyncStatus('syncing', 'Saving…');
-  try {
-    await Promise.all([
-      binFetch(cloudConfig.residentsBin, 'PUT', { residents: allResidents }),
-      binFetch(cloudConfig.usersBin,     'PUT', { users: allUsers }),
-    ]);
-    setSyncStatus('ok', `Saved ${fmtTime()}`);
-  } catch(e) {
+  Promise.all([
+    binFetch(cloudConfig.residentsBin, 'PUT', { residents: allResidents }),
+    binFetch(cloudConfig.usersBin,     'PUT', { users: allUsers })
+  ]).then(function() {
+    setSyncStatus('ok', 'Saved ' + fmtTime());
+  }).catch(function(e) {
     setSyncStatus('error', 'Save failed — data kept locally');
     console.warn('Push error:', e);
-  }
+  });
 }
 
 /* ─── Setup / Connect ─── */
-async function connectCloud() {
-  const key = document.getElementById('setup-key').value.trim();
-  const errEl = document.getElementById('setup-error');
+function connectCloud() {
+  var key = document.getElementById('setup-key').value.trim();
+  var errEl = document.getElementById('setup-error');
   if (!key) { errEl.textContent = 'Please paste your Master Key.'; errEl.style.display='block'; return; }
 
   errEl.style.display = 'none';
-  const btn = document.querySelector('#setup-modal .btn-primary');
+  var btn = document.querySelector('#setup-modal .btn-primary');
   btn.textContent = 'Connecting…'; btn.disabled = true;
 
-  try {
-    // Temporarily set key to test it
-    cloudConfig.apiKey = key;
-    // Create both bins
-    const rBinId = await createBin('ALFRD-Residents', { residents: SEED_RESIDENTS });
-    const uBinId = await createBin('ALFRD-Users',     { users: SEED_USERS });
-
-    cloudConfig.residentsBin = rBinId;
-    cloudConfig.usersBin     = uBinId;
-    localStorage.setItem('alfrd_apiKey',  key);
-    localStorage.setItem('alfrd_resBin',  rBinId);
-    localStorage.setItem('alfrd_usersBin',uBinId);
-
-    allResidents = [...SEED_RESIDENTS];
-    allUsers     = [...SEED_USERS];
-    saveLocal();
-    closeSetup();
-    startSyncInterval();
-    showToast('✓ Cloud connected & data initialized', 'success');
-    renderSyncBars();
-  } catch(e) {
+  cloudConfig.apiKey = key;
+  createBin('ALFRD-Residents', { residents: SEED_RESIDENTS }).then(function(rBinId) {
+    return createBin('ALFRD-Users', { users: SEED_USERS }).then(function(uBinId) {
+      cloudConfig.residentsBin = rBinId;
+      cloudConfig.usersBin     = uBinId;
+      localStorage.setItem('alfrd_apiKey',  key);
+      localStorage.setItem('alfrd_resBin',  rBinId);
+      localStorage.setItem('alfrd_usersBin', uBinId);
+      allResidents = SEED_RESIDENTS.slice();
+      allUsers     = SEED_USERS.slice();
+      saveLocal();
+      closeSetup();
+      startSyncInterval();
+      showToast('✓ Cloud connected & data initialized', 'success');
+      renderSyncBars();
+      btn.textContent = 'Connect & Initialize'; btn.disabled = false;
+    });
+  }).catch(function(e) {
     errEl.textContent = 'Could not connect. Check your API key and try again.';
     errEl.style.display = 'block';
     cloudConfig.apiKey = '';
-  }
-  btn.textContent = 'Connect & Initialize'; btn.disabled = false;
+    btn.textContent = 'Connect & Initialize'; btn.disabled = false;
+  });
 }
 
 function openSetup() { document.getElementById('setup-modal').classList.add('open'); }
@@ -2721,7 +2722,7 @@ function updateHeaders() {
    THEME
 ═══════════════════════════════════════════════════════ */
 function applyDeptTheme(dept) {
-  const cfg = DEPT_CONFIG[dept] || {};
+  var cfg = DEPT_CONFIG[dept] || {};
   document.documentElement.style.setProperty('--dept-color',       cfg.color || 'var(--amber)');
   document.documentElement.style.setProperty('--dept-focus-color', cfg.color || 'var(--amber)');
   document.documentElement.style.setProperty('--dept-focus-glow',  cfg.glow  || 'var(--amber-glow)');
@@ -2784,8 +2785,8 @@ function renderResidentList(list) {
 function filterResidents(q) {
   var lower = (q||'').toLowerCase();
   var filtered = allResidents.filter(function(r) {
-    return ((r.first||'') + ' ' + (r.last||'')).toLowerCase().includes(lower) ||
-           (r.room||'').toLowerCase().includes(lower);
+    return ((r.first||'') + ' ' + (r.last||'')).toLowerCase().indexOf(lower) !== -1 ||
+           (r.room||'').toLowerCase().indexOf(lower) !== -1;
   });
   renderResidentList(filtered);
 }
@@ -3217,7 +3218,7 @@ function saveClick() {
   }
 }
 
-async function saveRecord() { saveClick(); }
+function saveRecord() { saveClick(); }
 
 /* ═══════════════════════════════════════════════════════
    USER MANAGEMENT
@@ -3637,8 +3638,8 @@ function executeMoveOut() {
 }());
 
 /* ─── BOTTOM NAV ─── */
-let reportPeriod   = 'today'; // 'today' | 'week'
-let reportViewDept = null;    // null = use logged-in user's dept; set by admin selector
+var reportPeriod   = 'today'; // 'today' | 'week'
+var reportViewDept = null;    // null = use logged-in user's dept; set by admin selector
 
 function switchNav(tab) {
   if (tab === 'reports') {
